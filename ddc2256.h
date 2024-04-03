@@ -1,0 +1,111 @@
+#ifndef DDC2256_H
+#define DDC2256_H
+
+#include <QObject>
+#include <QTimer>
+
+#include <QThread>
+#ifdef _DDC2256_C_
+#define _DDC2256_C_EXT_
+#define _DDC2256_C_EXT_INT_ //
+#else
+#define _DDC2256_C_EXT_  extern
+#define _DDC2256_C_EXT_INT_ extern
+#endif
+
+//片选
+#define SPI1_CS1_LOW()       GPIOE->BSRRH = GPIO_PIN_4//GPIO_ResetBits(GPIOC, GPIO_Pin_7)
+#define SPI1_CS1_HIGH()      GPIOE->BSRRL = GPIO_PIN_4//GPIO_SetBits(GPIOC, GPIO_Pin_7)
+
+//高启动同步
+
+#define DDC2256_SNYC_PIN_LOW()      GPIOE->BSRRH = GPIO_PIN_5//;GPIOB->BSRRH = GPIO_PIN_9//GPIO_ResetBits(GPIOD, GPIO_Pin_7)
+#define DDC2256_SNYC_PIN_HIGH()     GPIOE->BSRRL = GPIO_PIN_5//; GPIOB->BSRRL = GPIO_PIN_9//GPIO_SetBits(GPIOD, GPIO_Pin_7)		//高启动同步
+
+
+
+#define DDC2556_CHIP_1 0
+#define DDC2556_CHIP_2 1
+#define DDC2556_CHIP_3 2
+#define DDC2556_CHIP_4 3
+#define DDC2556_CHIP_5 4
+#define DDC2556_CHIP_6 5
+#define DDC2556_CHIP_7 6
+
+typedef enum{
+    DDC2256_CHIP_1 = 0,
+    DDC2256_CHIP_2,
+}DDC2256_CHIP_X;
+
+
+struct ddc2556_data_type_
+{
+    uint16_t adc_vale[256];	//存放电荷量的量化值
+    uint32_t collect_sum;		//记录每个芯片是否有数据更新
+    uint8_t integr_cap_index;
+
+    uint8_t collect_cnt;
+};
+
+_DDC2256_C_EXT_INT_ volatile uint32_t ddc2556_data_upload_timer;
+_DDC2256_C_EXT_INT_ volatile uint8_t ddc2556_data_upload_flag;
+
+_DDC2256_C_EXT_INT_ volatile uint8_t ddc2556_conv_state;
+
+_DDC2256_C_EXT_ uint32_t ddc2556_data_wait_timer;
+
+
+_DDC2256_C_EXT_ struct ddc2556_data_type_ ddc2556_data[7];
+
+
+enum ddc2256_scan_task_event_table_
+{
+    DDC2256_SCAN_EVENT = 0,
+};
+
+
+class ddc2256 : public QThread
+{
+    Q_OBJECT
+public:
+    explicit ddc2256(QObject *parent = nullptr);
+    QTimer *tmer100ms;
+    QTimer *tmer500ms;
+    int devfd;
+    int icount;
+    int status;
+//    void ddc2256_set_add_up_time(uint8_t cnt);
+//    void ddc2256_set_integral_cap(uint8_t p_cap);
+//    void ddc2256_set_integral_time(uint16_t p_time);
+    //uint8_t read_ddc2256_adc_data(void);
+    void ddc2256_write_reg_multi_byte(uint8_t p_chip, uint16_t reg_s_addr, uint8_t *buf, uint16_t len);
+    void ddc2256_read_reg_multi_byte(uint8_t p_chip, uint16_t reg_s_addr, uint8_t *buf, uint16_t len);
+    uint8_t SPI1_read_write_byte(uint8_t byte);
+
+    void ddc2256_set_integral_time(uint16_t p_time);
+
+
+    uint8_t read_ddc2256_adc_data(uint8_t p_chip, uint8_t ic);
+
+
+    uint32_t ddc2256_read_head(uint8_t ch,uint8_t ic,uint8_t *head);
+    uint32_t ddc2256_read_data(uint8_t ch,uint8_t ic,uint8_t *data);
+    uint32_t ddc2256_read_num(uint8_t ch,uint8_t ic);
+    uint32_t ddc2256_read_fpga_state(uint8_t ch);
+    uint32_t ddc2256_read_fpga_id(uint8_t ch);
+    void ddc2256_set_add_up_time(uint8_t cnt);
+    void ddc2256_set_integral_cap(uint8_t p_cap);
+    //测量本底
+    void run() override;
+
+
+signals:
+    void onepictureok();
+private slots:
+    void dotmer100ms();
+    void dotmer50ms();
+
+
+};
+
+#endif // DDC2256_H

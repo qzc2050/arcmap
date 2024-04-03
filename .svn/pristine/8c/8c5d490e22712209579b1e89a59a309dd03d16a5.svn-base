@@ -1,0 +1,111 @@
+/********************************************************************************
+** Form generated from reading UI file 'mainwindow.ui'
+**
+** Created by: Qt User Interface Compiler version 5.9.0
+**
+** WARNING! All changes made in this file will be lost when recompiling UI file!
+********************************************************************************/
+
+#ifndef UI_MAINWINDOW_H
+#define UI_MAINWINDOW_H
+
+#include <QtCore/QVariant>
+#include <QtWidgets/QAction>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QWidget>
+
+QT_BEGIN_NAMESPACE
+
+class Ui_MainWindow
+{
+public:
+    QWidget *centralwidget;
+    QLabel *label;
+    QLabel *label_temp;
+    QLabel *label_press;
+    QLabel *label_xang;
+    QLabel *label_yang;
+    QLabel *label_ip;
+
+    void setupUi(QMainWindow *MainWindow)
+    {
+        if (MainWindow->objectName().isEmpty())
+            MainWindow->setObjectName(QStringLiteral("MainWindow"));
+        MainWindow->resize(800, 410);
+        centralwidget = new QWidget(MainWindow);
+        centralwidget->setObjectName(QStringLiteral("centralwidget"));
+        label = new QLabel(centralwidget);
+        label->setObjectName(QStringLiteral("label"));
+        label->setGeometry(QRect(0, 70, 800, 340));
+        label->setStyleSheet(QLatin1String("background-color: rgb(0, 100, 255);\n"
+"border-image: url(:/new/prefix1/Frame 9.png);\n"
+""));
+        label_temp = new QLabel(centralwidget);
+        label_temp->setObjectName(QStringLiteral("label_temp"));
+        label_temp->setGeometry(QRect(130, 100, 51, 21));
+        QFont font;
+        font.setPointSize(6);
+        label_temp->setFont(font);
+        label_temp->setStyleSheet(QStringLiteral("color: rgb(255, 255, 255);"));
+        label_temp->setAlignment(Qt::AlignCenter);
+        label_press = new QLabel(centralwidget);
+        label_press->setObjectName(QStringLiteral("label_press"));
+        label_press->setGeometry(QRect(200, 100, 81, 21));
+        label_press->setFont(font);
+        label_press->setStyleSheet(QStringLiteral("color: rgb(255, 255, 255);"));
+        label_press->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
+        label_xang = new QLabel(centralwidget);
+        label_xang->setObjectName(QStringLiteral("label_xang"));
+        label_xang->setGeometry(QRect(500, 160, 251, 51));
+        QFont font1;
+        font1.setPointSize(20);
+        font1.setBold(true);
+        font1.setWeight(75);
+        label_xang->setFont(font1);
+        label_xang->setStyleSheet(QStringLiteral("color: rgb(254, 245, 0);"));
+        label_xang->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
+        label_yang = new QLabel(centralwidget);
+        label_yang->setObjectName(QStringLiteral("label_yang"));
+        label_yang->setGeometry(QRect(500, 240, 251, 51));
+        label_yang->setFont(font1);
+        label_yang->setStyleSheet(QLatin1String("color: rgb(254, 245, 0);\n"
+""));
+        label_yang->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
+        label_ip = new QLabel(centralwidget);
+        label_ip->setObjectName(QStringLiteral("label_ip"));
+        label_ip->setGeometry(QRect(475, 333, 221, 41));
+        QFont font2;
+        font2.setPointSize(7);
+        label_ip->setFont(font2);
+        label_ip->setStyleSheet(QStringLiteral("color: rgb(255, 255, 255);"));
+        MainWindow->setCentralWidget(centralwidget);
+
+        retranslateUi(MainWindow);
+
+        QMetaObject::connectSlotsByName(MainWindow);
+    } // setupUi
+
+    void retranslateUi(QMainWindow *MainWindow)
+    {
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
+        label->setText(QString());
+        label_temp->setText(QApplication::translate("MainWindow", "28.1\302\260", Q_NULLPTR));
+        label_press->setText(QApplication::translate("MainWindow", "101.1Kpa", Q_NULLPTR));
+        label_xang->setText(QString());
+        label_yang->setText(QString());
+        label_ip->setText(QApplication::translate("MainWindow", "192.168.2.212", Q_NULLPTR));
+    } // retranslateUi
+
+};
+
+namespace Ui {
+    class MainWindow: public Ui_MainWindow {};
+} // namespace Ui
+
+QT_END_NAMESPACE
+
+#endif // UI_MAINWINDOW_H

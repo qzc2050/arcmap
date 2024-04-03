@@ -1,0 +1,27 @@
+<RCC>
+    <qresource prefix="/new/prefix1"/>
+    <qresource prefix="/">
+        <file>Frame 12(2).png</file>
+        <file>bat0.png</file>
+        <file>bat0_y.png</file>
+        <file>bat20.png</file>
+        <file>bat20_y.png</file>
+        <file>bat50.png</file>
+        <file>bat50_y.png</file>
+        <file>bat80.png</file>
+        <file>bat80_y.png</file>
+        <file>bat100.png</file>
+        <file>bat100_y.png</file>
+        <file>cbArrow.png</file>
+        <file>checked.png</file>
+        <file>eth0no.png</file>
+        <file>eth0yes.png</file>
+        <file>unchecked.png</file>
+        <file>wifi1.png</file>
+        <file>wifi2.png</file>
+        <file>wifi3.png</file>
+        <file>wifi4.png</file>
+        <file>wifi-no.png</file>
+        <file>yespng.png</file>
+    </qresource>
+</RCC>

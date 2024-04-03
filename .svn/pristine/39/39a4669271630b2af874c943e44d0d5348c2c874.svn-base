@@ -1,0 +1,245 @@
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include <QSettings>
+PsystemStatus GpsystemStatus;
+
+CONFIG_TYPE_ABOUT GproductInfo;
+#include <QFile>
+int GDebugMoni=0;
+
+CONFIG_TYPE_SETING GSeting;
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+
+
+    tcpnetser = new TcpNetServer();
+    tcpnetser->start(5001);
+
+    tcpnetser2 = new TcpNetServer();
+    tcpnetser2->start(5000);
+    system("ip addr add 192.168.2.212/23 dev eth0");
+
+
+    whybmp280 = NULL;
+    myads115 = NULL;
+    myddc2256 = NULL;
+
+
+    myscl300 = NULL;
+
+    myddc2256 = new ddc2256();
+    myscl300 = new scl300();
+
+    myiic = new myIIc();
+
+    iicfd = myiic->getid();
+
+    myscantimer = new QTimer(this);
+
+    qDebug()<<"iicfd"<<iicfd;
+    if(iicfd<0)
+    {
+
+        qDebug()<<"dS2783_iic->devfd not set";
+    }
+    else
+    {
+
+
+
+
+
+
+        whybmp280 = new MYBMP280();
+        whybmp280->setid(iicfd);
+        whybmp280->bmp280_init();
+
+        myads115 = new ADS118();
+        myads115->setid(iicfd);
+
+        /*
+         * 系统时间 现在自动对时服务ntp，如果没有网络
+         * */
+
+    }
+
+    initproinfo();
+    connect(myscantimer,SIGNAL(timeout()),this,SLOT(doscantimer()));
+
+    connect(myddc2256,SIGNAL(onepictureok()),tcpnetser2,SLOT(sendDataToClientsLocally()));
+    myscantimer->start(1000);
+    modbusdevice = new RDSModbusSlave();
+
+}
+void MainWindow::initproinfo()
+{
+
+
+    QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+
+    QString productsernum;
+    settings->beginGroup("GproductInfo");
+    if(settings->contains("productsernum"))
+    {
+        productsernum = settings->value("productsernum").toString();
+
+
+        //strcpy(GproductInfo.productsernum, settings->value("productsernum").toString().toStdString().c_str());
+
+    }
+    else
+    {
+        settings->setValue("productsernum","1234567890");
+        productsernum = "1234567890";
+        //strcpy(GproductInfo.productsernum, "123456");
+    }
+
+
+    settings->sync();
+    settings->endGroup();
+    delete  settings;
+
+    memset(&GproductInfo, 0, sizeof(CONFIG_TYPE_ABOUT));
+    strcpy(GproductInfo.productname, "SRTMap");
+    strcpy(GproductInfo.producttype, "SRTMap");
+    strcpy(GproductInfo.hardver, "1.0");
+    strcpy(GproductInfo.softver, "0.9");
+   // strcpy(GproductInfo.productsernum, "1703MC0501");
+
+    strncpy(GproductInfo.productsernum, productsernum.toUtf8().constData(), sizeof(GproductInfo.productsernum) - 1);
+    GproductInfo.productsernum[sizeof(GproductInfo.productsernum) - 1] = '\0';  // 添加终止的 null 字符
+
+    qDebug()<<productsernum<<QString(GproductInfo.productsernum);
+
+
+}
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+void MainWindow::doscantimer()
+{
+    QFile filex("/sys/class/thermal/thermal_zone0/temp");
+
+    float xx,yy,zz;
+   // myscl300->SCL3300_Test();
+   xx =  myscl300->SCL3300_ReadAngle(0);
+   zz =  myscl300->SCL3300_ReadAngle(1);
+   yy= myscl300->SCL3300_ReadAngle(2)*(-1.0);
+   qDebug()<<xx<<yy<<zz;
+
+
+   if(zz>0)
+   {
+       if(xx>0)
+       {
+           xx = zz+90;
+
+       }
+       else
+       {
+           xx = xx-90;
+       }
+   }
+
+   if(-0.099<xx&&xx<0.099)
+   {
+       xx=0;
+   }
+
+   QString sx;
+
+   sx.append(QString::number(xx,'f',1));
+   sx.append("°");
+   ui->label_xang->clear();
+   ui->label_xang->setText(sx);
+
+   GpsystemStatus.x = xx;
+
+
+
+
+
+
+   if(-0.099<yy&&yy<0.099)
+   {
+       xx=0;
+   }
+   QString syy;
+
+   syy.append(QString::number(yy,'f',1));
+   syy.append("°");
+
+    ui->label_yang->clear();
+   ui->label_yang->setText(syy);
+
+   GpsystemStatus.x = xx;
+   GpsystemStatus.y = yy;
+   GpsystemStatus.z = zz;
+
+    QString stemp = QString::number(GpsystemStatus.temp, 'f', 1).append("℃");
+   ui->label_temp->setText(stemp);
+
+    switch (icount)
+    {
+
+
+        case 0:
+
+
+            break;
+        case 1:
+
+
+            break;
+
+        case 2:
+            if(whybmp280)
+            {
+                float fpress = whybmp280->bmp280_get_pressure()/1000;
+                GpsystemStatus.press = fpress;
+
+                GpsystemStatus.pressstatus = whybmp280->status;
+
+                QString sfpress = QString::number(fpress, 'f', 1).append("Kpa");
+                ui->label_press->setText(sfpress);
+
+                qDebug()<<"press"<<fpress<<whybmp280->bmp280_get_temperature();
+
+            }
+         break;
+        case 3:
+            #ifdef Q_OS_LINUX
+
+                if (filex.open(QIODevice::ReadOnly))
+                {
+                    QString tempString = filex.readAll();
+                    filex.close();
+
+                    bool ok;
+                    double temperature = tempString.toDouble(&ok);
+                    if (ok)
+                    {
+                        GpsystemStatus.tempcpu = temperature;
+                        //qDebug()<<"cpu tem"<<GpsystemStatus.tempcpu;
+                        //return temperature / 1000.0; // 转换为摄氏度
+                    }
+                }
+            #endif
+           break;
+    default:
+
+        break;
+
+    }
+
+    icount++;
+    if(icount%5==0)
+    {
+
+        icount = 0;
+    }
+}

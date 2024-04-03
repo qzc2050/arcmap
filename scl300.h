@@ -1,0 +1,106 @@
+#ifndef SCL300_H
+#define SCL300_H
+
+#include <QObject>
+/*********************************************************************
+ * INCLUDES
+ */
+
+/*********************************************************************
+ * DEFINITIONS
+ */
+#define ANG_X                   0
+#define ANG_Y                   1
+#define ANG_Z                   2
+
+//******************************************************************/
+//                          传感数据                                /
+//******************************************************************/
+#define READ_ACC_X              0x040000F7
+#define READ_ACC_Y              0x080000FD
+#define READ_ACC_Z              0x0C0000FB
+#define READ_TEMPERATURE        0x140000EF
+#define READ_ANG_X              0x240000C7
+#define READ_ANG_Y              0x280000CD
+#define READ_ANG_Z              0x2C0000CB
+
+//******************************************************************/
+//                          自我检测                                /
+//******************************************************************/
+#define READ_STO                0x100000E9
+
+//******************************************************************/
+//                          状态                                    /
+//******************************************************************/
+#define READ_STATUS_SUMMARY     0x180000E5
+
+//******************************************************************/
+//                          错误标志                                /
+//******************************************************************/
+#define READ_ERR_FLAG1          0x1C0000E3
+#define READ_ERR_FLAG2          0x200000C1
+
+//******************************************************************/
+//                          命令                                    /
+//******************************************************************/
+#define READ_CMD                0x340000DF
+#define CHANGE_TO_MODE1         0xB400001F  // 默认模式，1.8g full-scale 40 Hz 1st order low pass filter
+#define CHANGE_TO_MODE2         0xB4000102  // 23.6g full-scale 70 Hz 1st order low pass filter
+#define CHANGE_TO_MODE3         0xB4000225  // Inclination mode 13 Hz 1st order low pass filter
+#define CHANGE_TO_MODE4         0xB4000338  // Inclination mode 13 Hz 1st order low pass filter Low noise mode
+#define SET_POWER_DOWN_MODE     0xB400046B
+#define WAKE_UP                 0xB400001F
+#define SW_RESET                0xB4002098
+
+//******************************************************************/
+//                          角度控制                                /
+//******************************************************************/
+#define ENABLE_ANGLE_OUTPUTS    0xB0001F6F
+
+//******************************************************************/
+//                          芯片ID                                  /
+//******************************************************************/
+#define READ_ID                 0x40000091
+
+//******************************************************************/
+//                          串行块                                  /
+//******************************************************************/
+#define READ_SERIAL1            0x640000A7
+#define READ_SERIAL2            0x680000AD
+
+//******************************************************************/
+//                          选择BANK                                /
+//******************************************************************/
+#define READ_CURRENT_BANK       0x7C0000B3
+#define SWITCH_TO_BANK_0        0xFC000073 // 默认，读bank1后自动返回
+#define SWITCH_TO_BANK_1        0xFC00016E
+
+
+class scl300 : public QObject
+{
+    Q_OBJECT
+public:
+    explicit scl300(QObject *parent = nullptr);
+    void SCL3300_Init(void);
+    void SCL3300_Test(void);
+    float SCL3300_ReadAngle(uint8_t direction);
+    int devfd;
+    int status;
+    void  scl300_read_reg_multi_byte(uint8_t *buf, uint16_t len);
+    void delayMs(int msec);
+
+    void scl300_write_reg_multi_byte( uint8_t *buf, uint16_t len);
+    void readRegister(uint8_t  *s_readData,int len);
+    void writeRegister(uint32_t cmd);
+    int CS(unsigned value);
+signals:
+
+};
+
+#endif // SCL300_H
+
+
+
+
+
+
