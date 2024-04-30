@@ -353,7 +353,7 @@ ADS118::ADS118(QObject *parent) : QObject(parent)
     //adstimer->setInterval(1000);
 
     //非工作状态
-    adstimer->start(1000);
+    //adstimer->start(1000);
     connect(adstimer,SIGNAL(timeout()),this,SLOT(doadstimer()));
 
 }

@@ -1,0 +1,96 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|J:\\BaiduNetdiskDownload\\qt\\srtmap\\modbusslave.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:modbusslave.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|J:\\BaiduNetdiskDownload\\qt\\srtmap\\ddc2256.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ddc2256.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|J:\\BaiduNetdiskDownload\\qt\\srtmap\\ddc2256.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ddc2256.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|J:\\BaiduNetdiskDownload\\qt\\srtmap\\mainwindow.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:mainwindow.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ddc2256.h",
+              "DocumentMoniker": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\ddc2256.h",
+              "RelativeDocumentMoniker": "ddc2256.h",
+              "ToolTip": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\ddc2256.h",
+              "RelativeToolTip": "ddc2256.h",
+              "ViewState": "AQIAAD8AAAAAAAAAAAAIwGQAAAAXAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-04-11T09:21:09.478Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{df72777a-9fad-4a96-a35f-866efd0a1ce4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ddc2256.cpp",
+              "DocumentMoniker": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\ddc2256.cpp",
+              "RelativeDocumentMoniker": "ddc2256.cpp",
+              "ToolTip": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\ddc2256.cpp",
+              "RelativeToolTip": "ddc2256.cpp",
+              "ViewState": "AQIAABIBAAAAAAAAAAAIwBYBAAAmAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-04-11T09:10:22.537Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "modbusslave.cpp",
+              "DocumentMoniker": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\modbusslave.cpp",
+              "RelativeDocumentMoniker": "modbusslave.cpp",
+              "ToolTip": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\modbusslave.cpp",
+              "RelativeToolTip": "modbusslave.cpp",
+              "ViewState": "AQIAAKEAAAAAAAAAAAAkwLEAAAA4AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-04-08T09:14:08.248Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "mainwindow.cpp",
+              "DocumentMoniker": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\mainwindow.cpp",
+              "RelativeDocumentMoniker": "mainwindow.cpp",
+              "ToolTip": "J:\\BaiduNetdiskDownload\\qt\\srtmap\\mainwindow.cpp",
+              "RelativeToolTip": "mainwindow.cpp",
+              "ViewState": "AQIAACcCAAAAAAAAAAAgwD0CAAANAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-04-08T08:41:39.441Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

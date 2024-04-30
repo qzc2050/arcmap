@@ -52,9 +52,12 @@ OBJECTS_DIR   = ./
 ####### Files
 
 SOURCES       = ads118.cpp \
+		anathread.cpp \
 		bmp280.cpp \
 		ddc2256.cpp \
 		fbtft.cpp \
+		gpio_contorl.cpp \
+		iicthread.cpp \
 		main.cpp \
 		mainwindow.cpp \
 		modbusslave.cpp \
@@ -65,14 +68,19 @@ SOURCES       = ads118.cpp \
 		moc_bmp280.cpp \
 		moc_ddc2256.cpp \
 		moc_fbtft.cpp \
+		moc_gpio_contorl.cpp \
+		moc_iicthread.cpp \
 		moc_mainwindow.cpp \
 		moc_myiic.cpp \
 		moc_scl300.cpp \
 		moc_tcpnetserver.cpp
 OBJECTS       = ads118.o \
+		anathread.o \
 		bmp280.o \
 		ddc2256.o \
 		fbtft.o \
+		gpio_contorl.o \
+		iicthread.o \
 		main.o \
 		mainwindow.o \
 		modbusslave.o \
@@ -84,6 +92,8 @@ OBJECTS       = ads118.o \
 		moc_bmp280.o \
 		moc_ddc2256.o \
 		moc_fbtft.o \
+		moc_gpio_contorl.o \
+		moc_iicthread.o \
 		moc_mainwindow.o \
 		moc_myiic.o \
 		moc_scl300.o \
@@ -251,17 +261,23 @@ DIST          = res/Frame \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/features/yacc.prf \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/features/lex.prf \
 		srtmap.pro ads118.h \
+		anathread.h \
 		bmp280.h \
 		ddc2256.h \
 		fbtft.h \
+		gpio_contorl.h \
+		iicthread.h \
 		mainwindow.h \
 		modbusslave.h \
 		myiic.h \
 		scl300.h \
 		tcpnetserver.h ads118.cpp \
+		anathread.cpp \
 		bmp280.cpp \
 		ddc2256.cpp \
 		fbtft.cpp \
+		gpio_contorl.cpp \
+		iicthread.cpp \
 		main.cpp \
 		mainwindow.cpp \
 		modbusslave.cpp \
@@ -630,8 +646,8 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents res/res.qrc $(DISTDIR)/
 	$(COPY_FILE) --parents /home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ads118.h bmp280.h ddc2256.h fbtft.h mainwindow.h modbusslave.h myiic.h scl300.h tcpnetserver.h $(DISTDIR)/
-	$(COPY_FILE) --parents ads118.cpp bmp280.cpp ddc2256.cpp fbtft.cpp main.cpp mainwindow.cpp modbusslave.cpp myiic.cpp scl300.cpp tcpnetserver.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ads118.h anathread.h bmp280.h ddc2256.h fbtft.h gpio_contorl.h iicthread.h mainwindow.h modbusslave.h myiic.h scl300.h tcpnetserver.h $(DISTDIR)/
+	$(COPY_FILE) --parents ads118.cpp anathread.cpp bmp280.cpp ddc2256.cpp fbtft.cpp gpio_contorl.cpp iicthread.cpp main.cpp mainwindow.cpp modbusslave.cpp myiic.cpp scl300.cpp tcpnetserver.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents mainwindow.ui $(DISTDIR)/
 
 
@@ -669,6 +685,7 @@ qrc_res.cpp: res/res.qrc \
 		res/wifi4.png \
 		res/eth0no.png \
 		res/yespng.png \
+		res/Frame1211.png \
 		res/unchecked.png \
 		res/bat50.png \
 		res/bat0.png \
@@ -690,9 +707,9 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/features/data/dummy.cpp
 	arm-linux-gnueabihf-g++ -pipe -mfpu=neon -marm -mcpu=cortex-a7 --sysroot=/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/../../..//out/sun8iw11p1/linux/common/buildroot/host/usr/arm-buildroot-linux-gnueabihf/sysroot -O2 -std=gnu++11 -Wall -W -dM -E -o moc_predefs.h /home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_ads118.cpp moc_bmp280.cpp moc_ddc2256.cpp moc_fbtft.cpp moc_mainwindow.cpp moc_myiic.cpp moc_scl300.cpp moc_tcpnetserver.cpp
+compiler_moc_header_make_all: moc_ads118.cpp moc_bmp280.cpp moc_ddc2256.cpp moc_fbtft.cpp moc_gpio_contorl.cpp moc_iicthread.cpp moc_mainwindow.cpp moc_myiic.cpp moc_scl300.cpp moc_tcpnetserver.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_ads118.cpp moc_bmp280.cpp moc_ddc2256.cpp moc_fbtft.cpp moc_mainwindow.cpp moc_myiic.cpp moc_scl300.cpp moc_tcpnetserver.cpp
+	-$(DEL_FILE) moc_ads118.cpp moc_bmp280.cpp moc_ddc2256.cpp moc_fbtft.cpp moc_gpio_contorl.cpp moc_iicthread.cpp moc_mainwindow.cpp moc_myiic.cpp moc_scl300.cpp moc_tcpnetserver.cpp
 moc_ads118.cpp: /home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs.h \
@@ -939,6 +956,124 @@ moc_fbtft.cpp: /home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc
 	/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc $(DEFINES) --include ./moc_predefs.h -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/linux-arm-gnueabi-g++ -I/mnt/hgfs/BaiduNetdiskDownload/qt/srtmap -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1 -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1/arm-linux-gnueabihf -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1/backward -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/lib/gcc/arm-linux-gnueabihf/5.3.1/include -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/lib/gcc/arm-linux-gnueabihf/5.3.1/include-fixed -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/usr/arm-buildroot-linux-gnueabihf/sysroot/usr/include fbtft.h -o moc_fbtft.cpp
 
+moc_gpio_contorl.cpp: /home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnamespace.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig-bootstrapped.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtcore-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsystemdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qprocessordetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcompilerdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtypeinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsysinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlogging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qflags.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasicatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_bootstrap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qgenericatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_cxx11.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_msvc.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobalstatic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmutex.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnumeric.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qversiontagging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstring.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qchar.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qrefcount.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qarraydata.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringbuilder.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qalgorithms.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qiterator.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qhashfunctions.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qpair.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearraylist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qregexp.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringmatcher.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreevent.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qscopedpointer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmetatype.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvarlengtharray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcontainerfwd.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QThread \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qthread.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QTimer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtimer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasictimer.h \
+		gpio_contorl.h \
+		moc_predefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc
+	/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc $(DEFINES) --include ./moc_predefs.h -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/linux-arm-gnueabi-g++ -I/mnt/hgfs/BaiduNetdiskDownload/qt/srtmap -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1 -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1/arm-linux-gnueabihf -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1/backward -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/lib/gcc/arm-linux-gnueabihf/5.3.1/include -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/lib/gcc/arm-linux-gnueabihf/5.3.1/include-fixed -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/usr/arm-buildroot-linux-gnueabihf/sysroot/usr/include gpio_contorl.h -o moc_gpio_contorl.cpp
+
+moc_iicthread.cpp: /home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnamespace.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig-bootstrapped.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtcore-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsystemdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qprocessordetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcompilerdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtypeinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsysinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlogging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qflags.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasicatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_bootstrap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qgenericatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_cxx11.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_msvc.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobalstatic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmutex.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnumeric.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qversiontagging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstring.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qchar.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qrefcount.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qarraydata.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringbuilder.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qalgorithms.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qiterator.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qhashfunctions.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qpair.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearraylist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qregexp.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringmatcher.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreevent.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qscopedpointer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmetatype.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvarlengtharray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcontainerfwd.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QThread \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qthread.h \
+		myiic.h \
+		bmp280.h \
+		scl300.h \
+		ads118.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QTimer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtimer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasictimer.h \
+		iicthread.h \
+		moc_predefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc
+	/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc $(DEFINES) --include ./moc_predefs.h -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/mkspecs/linux-arm-gnueabi-g++ -I/mnt/hgfs/BaiduNetdiskDownload/qt/srtmap -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus -I/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1 -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1/arm-linux-gnueabihf -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include/c++/5.3.1/backward -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/lib/gcc/arm-linux-gnueabihf/5.3.1/include -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/lib/gcc/arm-linux-gnueabihf/5.3.1/include-fixed -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/opt/ext-toolchain/arm-linux-gnueabihf/include -I/home/qinzhencai/out/sun8iw11p1/linux/common/buildroot/host/usr/arm-buildroot-linux-gnueabihf/sysroot/usr/include iicthread.h -o moc_iicthread.cpp
+
 moc_mainwindow.cpp: ddc2256.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject.h \
@@ -1058,10 +1193,11 @@ moc_mainwindow.cpp: ddc2256.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
 		myiic.h \
-		ads118.h \
 		bmp280.h \
 		scl300.h \
+		ads118.h \
 		modbusslave.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
@@ -1075,6 +1211,7 @@ moc_mainwindow.cpp: ddc2256.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h \
 		mainwindow.h \
 		moc_predefs.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc
@@ -1409,6 +1546,7 @@ ads118.o: ads118.cpp ads118.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
 		bmp280.h \
 		scl300.h \
 		modbusslave.h \
@@ -1423,8 +1561,61 @@ ads118.o: ads118.cpp ads118.h \
 		fbtft.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
-		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ads118.o ads118.cpp
+
+anathread.o: anathread.cpp anathread.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnamespace.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig-bootstrapped.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtcore-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsystemdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qprocessordetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcompilerdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtypeinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsysinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlogging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qflags.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasicatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_bootstrap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qgenericatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_cxx11.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_msvc.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobalstatic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmutex.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnumeric.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qversiontagging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstring.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qchar.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qrefcount.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qarraydata.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringbuilder.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qalgorithms.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qiterator.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qhashfunctions.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qpair.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearraylist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qregexp.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringmatcher.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreevent.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qscopedpointer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmetatype.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvarlengtharray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcontainerfwd.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QThread \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qthread.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o anathread.o anathread.cpp
 
 bmp280.o: bmp280.cpp bmp280.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
@@ -1597,10 +1788,11 @@ ddc2256.o: ddc2256.cpp ddc2256.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
 		myiic.h \
-		ads118.h \
 		bmp280.h \
 		scl300.h \
+		ads118.h \
 		modbusslave.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
@@ -1613,7 +1805,13 @@ ddc2256.o: ddc2256.cpp ddc2256.h \
 		fbtft.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
-		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QCoreApplication \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreapplication.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qeventloop.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ddc2256.o ddc2256.cpp
 
 fbtft.o: fbtft.cpp fbtft.h \
@@ -1757,10 +1955,11 @@ fbtft.o: fbtft.cpp fbtft.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
 		myiic.h \
-		ads118.h \
 		bmp280.h \
 		scl300.h \
+		ads118.h \
 		modbusslave.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
@@ -1769,8 +1968,294 @@ fbtft.o: fbtft.cpp fbtft.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qserialbusglobal.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbuspdu.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusTcpServer \
-		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbustcpserver.h
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbustcpserver.h \
+		gpio_contorl.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o fbtft.o fbtft.cpp
+
+gpio_contorl.o: gpio_contorl.cpp gpio_contorl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnamespace.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig-bootstrapped.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtcore-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsystemdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qprocessordetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcompilerdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtypeinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsysinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlogging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qflags.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasicatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_bootstrap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qgenericatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_cxx11.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_msvc.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobalstatic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmutex.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnumeric.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qversiontagging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstring.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qchar.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qrefcount.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qarraydata.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringbuilder.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qalgorithms.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qiterator.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qhashfunctions.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qpair.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearraylist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qregexp.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringmatcher.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreevent.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qscopedpointer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmetatype.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvarlengtharray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcontainerfwd.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QThread \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qthread.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QTimer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtimer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasictimer.h \
+		mainwindow.h \
+		ddc2256.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/QMainWindow \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qmainwindow.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qtwidgetsglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtguiglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtgui-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qtwidgets-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qwidget.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qwindowdefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qwindowdefs_win.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmargins.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpaintdevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qrect.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsize.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qpoint.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpalette.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qcolor.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qrgb.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qrgba64.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qbrush.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvector.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qmatrix.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpolygon.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qregion.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatastream.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qiodevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qline.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtransform.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpainterpath.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qimage.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpixelformat.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpixmap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsharedpointer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qshareddata.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qhash.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsharedpointer_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qfont.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qfontmetrics.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qfontinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qsizepolicy.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qcursor.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qkeysequence.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qevent.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvariant.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdebug.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtextstream.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlocale.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qset.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcontiguouscache.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qurl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qurlquery.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qfile.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qfiledevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qvector2d.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtouchdevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qtabwidget.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qicon.h \
+		tcpnetserver.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpServer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpserver.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtnetworkglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtnetwork-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qabstractsocket.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
+		myiic.h \
+		bmp280.h \
+		scl300.h \
+		ads118.h \
+		modbusslave.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusdataunit.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusdevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qserialbusglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbuspdu.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusTcpServer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbustcpserver.h \
+		fbtft.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDebug
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gpio_contorl.o gpio_contorl.cpp
+
+iicthread.o: iicthread.cpp iicthread.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QObject \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnamespace.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig-bootstrapped.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qconfig.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtcore-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsystemdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qprocessordetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcompilerdetection.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtypeinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsysinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlogging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qflags.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasicatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_bootstrap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qgenericatomic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_cxx11.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qatomic_msvc.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qglobalstatic.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmutex.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qnumeric.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qversiontagging.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobjectdefs_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstring.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qchar.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qrefcount.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qarraydata.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringbuilder.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qalgorithms.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qiterator.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qhashfunctions.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qpair.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbytearraylist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringlist.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qregexp.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qstringmatcher.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreevent.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qscopedpointer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmetatype.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvarlengtharray.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcontainerfwd.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qobject_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QThread \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qthread.h \
+		myiic.h \
+		bmp280.h \
+		scl300.h \
+		ads118.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QTimer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtimer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qbasictimer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDebug \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdebug.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qhash.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qtextstream.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qiodevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qlocale.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvariant.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qshareddata.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qvector.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qpoint.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qset.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcontiguouscache.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsharedpointer.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsharedpointer_impl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QTime \
+		mainwindow.h \
+		ddc2256.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/QMainWindow \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qmainwindow.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qtwidgetsglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtguiglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtgui-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qtwidgets-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qwidget.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qwindowdefs.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qwindowdefs_win.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qmargins.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpaintdevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qrect.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsize.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpalette.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qcolor.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qrgb.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qrgba64.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qbrush.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qmatrix.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpolygon.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qregion.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatastream.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qline.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtransform.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpainterpath.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qimage.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpixelformat.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qpixmap.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qfont.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qfontmetrics.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qfontinfo.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qsizepolicy.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qcursor.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qkeysequence.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qevent.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qurl.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qurlquery.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qfile.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qfiledevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qvector2d.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtouchdevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qtabwidget.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qicon.h \
+		tcpnetserver.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpServer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpserver.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtnetworkglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtnetwork-config.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qabstractsocket.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		modbusslave.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusdataunit.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusdevice.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qserialbusglobal.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbuspdu.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusTcpServer \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbustcpserver.h \
+		fbtft.h \
+		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o iicthread.o iicthread.cpp
 
 main.o: main.cpp mainwindow.h \
 		ddc2256.h \
@@ -1892,10 +2377,11 @@ main.o: main.cpp mainwindow.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
 		myiic.h \
-		ads118.h \
 		bmp280.h \
 		scl300.h \
+		ads118.h \
 		modbusslave.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
@@ -1909,6 +2395,7 @@ main.o: main.cpp mainwindow.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/QApplication \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qapplication.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreapplication.h \
@@ -2038,10 +2525,11 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
 		myiic.h \
-		ads118.h \
 		bmp280.h \
 		scl300.h \
+		ads118.h \
 		modbusslave.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
@@ -2055,6 +2543,7 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h \
 		ui_mainwindow.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QVariant \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/QAction \
@@ -2238,14 +2727,16 @@ modbusslave.o: modbusslave.cpp modbusslave.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qhostaddress.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QTcpSocket \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qtcpsocket.h \
+		iicthread.h \
 		myiic.h \
-		ads118.h \
 		bmp280.h \
 		scl300.h \
+		ads118.h \
 		fbtft.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QSettings \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsettings.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbusslave.o modbusslave.cpp
@@ -2505,10 +2996,11 @@ tcpnetserver.o: tcpnetserver.cpp tcpnetserver.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qtouchdevice.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qtabwidget.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/qicon.h \
+		iicthread.h \
 		myiic.h \
-		ads118.h \
 		bmp280.h \
 		scl300.h \
+		ads118.h \
 		modbusslave.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/QModbusServer \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbusserver.h \
@@ -2522,6 +3014,7 @@ tcpnetserver.o: tcpnetserver.cpp tcpnetserver.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDateTime \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QImage \
+		gpio_contorl.h \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QSettings \
 		/home/qinzhencai/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsettings.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tcpnetserver.o tcpnetserver.cpp
@@ -2540,6 +3033,12 @@ moc_ddc2256.o: moc_ddc2256.cpp
 
 moc_fbtft.o: moc_fbtft.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_fbtft.o moc_fbtft.cpp
+
+moc_gpio_contorl.o: moc_gpio_contorl.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_gpio_contorl.o moc_gpio_contorl.cpp
+
+moc_iicthread.o: moc_iicthread.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_iicthread.o moc_iicthread.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp

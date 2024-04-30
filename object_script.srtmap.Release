@@ -1,7 +1,10 @@
 release/ads118.o
+release/anathread.o
 release/bmp280.o
 release/ddc2256.o
 release/fbtft.o
+release/gpio_contorl.o
+release/iicthread.o
 release/main.o
 release/mainwindow.o
 release/modbusslave.o
@@ -13,6 +16,8 @@ release/moc_ads118.o
 release/moc_bmp280.o
 release/moc_ddc2256.o
 release/moc_fbtft.o
+release/moc_gpio_contorl.o
+release/moc_iicthread.o
 release/moc_mainwindow.o
 release/moc_myiic.o
 release/moc_scl300.o

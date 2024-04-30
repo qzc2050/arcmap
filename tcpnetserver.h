@@ -57,7 +57,14 @@
 #define NET_CMD_CODE_SET_IP (10)	//设置IP
 #define NET_CMD_CODE_GET_FW_VER (11)	//获取固件版本号
 #define NET_CMD_CODE_SET_ANGLE_0 (12)	//设置当前位置角度为0
-
+#define NET_CMD_CODE_SET_WIFINAME (13)	//设置wifi名称
+#define NET_CMD_CODE_SET_WIFIPASS (14)	//设置wifi密码
+//读wifi名称
+#define NET_CMD_CODE_GET_WIFINAME (15)
+//读wifi密码
+#define NET_CMD_CODE_GET_WIFIPASS (16)
+//读取角度
+#define NET_CMD_CODE_GET_WIFIPASS (17)
 //数据长度位置引索
 #define NET_CMD_HEAD_INDEX_1 (0)//同步头
 #define NET_CMD_HEAD_INDEX_2 (1)

@@ -44,11 +44,11 @@ public:
         label = new QLabel(centralwidget);
         label->setObjectName(QStringLiteral("label"));
         label->setGeometry(QRect(0, 0, 480, 320));
-        label->setStyleSheet(QLatin1String("border-image: url(:/Frame 12(2).png);\n"
+        label->setStyleSheet(QLatin1String("border-image: url(:/Frame1211.png);\n"
 ""));
         label_temp = new QLabel(centralwidget);
         label_temp->setObjectName(QStringLiteral("label_temp"));
-        label_temp->setGeometry(QRect(100, 43, 51, 20));
+        label_temp->setGeometry(QRect(105, 43, 51, 20));
         QFont font;
         font.setPointSize(15);
         label_temp->setFont(font);
@@ -56,13 +56,13 @@ public:
         label_temp->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
         label_press = new QLabel(centralwidget);
         label_press->setObjectName(QStringLiteral("label_press"));
-        label_press->setGeometry(QRect(155, 43, 90, 20));
+        label_press->setGeometry(QRect(165, 43, 90, 20));
         label_press->setFont(font);
         label_press->setStyleSheet(QStringLiteral("color: rgb(255, 255, 255);"));
         label_press->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
         label_xang = new QLabel(centralwidget);
         label_xang->setObjectName(QStringLiteral("label_xang"));
-        label_xang->setGeometry(QRect(300, 80, 161, 51));
+        label_xang->setGeometry(QRect(290, 82, 171, 51));
         QFont font1;
         font1.setPointSize(30);
         font1.setBold(true);
@@ -72,7 +72,7 @@ public:
         label_xang->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
         label_yang = new QLabel(centralwidget);
         label_yang->setObjectName(QStringLiteral("label_yang"));
-        label_yang->setGeometry(QRect(300, 140, 161, 41));
+        label_yang->setGeometry(QRect(290, 135, 171, 41));
         label_yang->setFont(font1);
         label_yang->setStyleSheet(QLatin1String("color: rgb(254, 245, 0);\n"
 ""));

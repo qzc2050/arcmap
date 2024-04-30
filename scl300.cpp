@@ -61,7 +61,7 @@ int scl300::CS(unsigned value)
 */
 void scl300:: writeRegister(uint32_t cmd)
 {
-     //CS(0);
+     CS(0);
      delayMs(5);
     uint8_t writeData[4] = {0};
     writeData[0] = (cmd >> 24) & 0xFF;
@@ -84,7 +84,7 @@ void scl300:: writeRegister(uint32_t cmd)
 
 
      delayMs(5);
-     //CS(1);
+     CS(1);
 }
 /**
  @brief 读SCL3300寄存器
@@ -95,7 +95,7 @@ void scl300::readRegister(uint8_t  *s_readData,int len)
 {
 
 
-    //CS(0);
+    CS(0);
     delayMs(5);
 //    #ifdef Q_OS_LINUX
 //    // 假设chunk是包含数据的QByteArray
@@ -110,7 +110,7 @@ void scl300::readRegister(uint8_t  *s_readData,int len)
 
 
     delayMs(5);
-    //CS(1);
+    CS(1);
 }
 
 scl300::scl300(QObject *parent) : QObject(parent)

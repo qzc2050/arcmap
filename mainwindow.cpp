@@ -22,9 +22,10 @@ MainWindow::MainWindow(QWidget *parent)
     mytft = new FbTFT(this);
     mytft->LCD_Init();
     connect(mytft, &FbTFT::finished, this, &MainWindow::onThreadFinished);
-   // mytft->start();
 
-    //mytft->showtest();
+
+
+    mygpio = new GPIO_CONTORL();
 
     binit = false;
 
@@ -33,57 +34,29 @@ MainWindow::MainWindow(QWidget *parent)
 
     tcpnetser2 = new TcpNetServer();
     tcpnetser2->start(5000);
-//    system("ip addr add 192.168.2.218/23 dev eth0");
-//    system("ip addr add 192.168.2.212/23 dev eth0");
-//    //system("ip addr add 192.168.2.212/24 dev wlan0");
-////ip addr add 192.168.2.212/23 dev wlan0
 
-    whybmp280 = NULL;
+    myiicthread = new iicThread();
 
-    myads115 = NULL;
+    myiicthread->start(QThread::IdlePriority);
+
+
+
     myddc2256 = NULL;
 
 
-    myscl300 = NULL;
+
 
     myddc2256 = new ddc2256();
    //
-    myscl300 = new scl300();
 
-    myiic = new myIIc();
 
-    iicfd = myiic->getid();
+
 
     myscantimer = new QTimer(this);
 
 
 
-    qDebug()<<"iicfd"<<iicfd;
-    if(iicfd<0)
-    {
 
-        qDebug()<<"dS2783_iic->devfd not set";
-    }
-    else
-    {
-
-
-
-
-
-
-        whybmp280 = new MYBMP280();
-        whybmp280->setid(iicfd);
-        whybmp280->bmp280_init();
-
-        myads115 = new ADS118();
-        myads115->setid(iicfd);
-
-        /*
-         * 系统时间 现在自动对时服务ntp，如果没有网络
-         * */
-
-    }
 
     initproinfo();
     connect(myscantimer,SIGNAL(timeout()),this,SLOT(doscantimer()));
@@ -98,7 +71,7 @@ void MainWindow::onThreadFinished()
 {
 
     mytft->setImage();
-    mytft->start();
+    mytft->start(QThread::IdlePriority);
 
 }
 void MainWindow::initproinfo()
@@ -167,6 +140,43 @@ void MainWindow::initproinfo()
         settings->setValue("password","raydose888");
     }
     settings->endGroup();
+    //更新cx cy cz group是cangle，key 分别是cx cy cz
+    settings->beginGroup("cangle");
+    if(settings->contains("cx"))
+    {
+        GpsystemStatus.cx = settings->value("cx").toFloat();  //cx
+        qDebug()<<"cx"<<GpsystemStatus.cx;
+    }
+    else
+    {
+        GpsystemStatus.cx = 0;
+        qDebug()<<"cx"<<GpsystemStatus.cx;
+        settings->setValue("cx",0);
+    }
+    if(settings->contains("cy"))
+    {
+        GpsystemStatus.cy = settings->value("cy").toFloat();  //cy
+        qDebug()<<"cy"<<GpsystemStatus.cy;
+    }
+    else
+    {
+        GpsystemStatus.cy = 0;
+        qDebug()<<"cy"<<GpsystemStatus.cy;
+        settings->setValue("cy",0);
+    }
+    if(settings->contains("cz"))
+    {
+        GpsystemStatus.cz = settings->value("cz").toFloat();  //cz
+        qDebug()<<"cz"<<GpsystemStatus.cz;
+    }
+    else
+    {
+        GpsystemStatus.cz = 0;
+        qDebug()<<"cz"<<GpsystemStatus.cz;
+        settings->setValue("cz",0);
+    }
+    settings->endGroup();
+
 
 
 
@@ -194,78 +204,48 @@ MainWindow::~MainWindow()
 void MainWindow::doscantimer()
 {
 
-//    icount++;
-//    if(icount%5==0)
-//    {
-//        mytft->LCD_UpdateScreen();
-//    }
-//    else
-//    {
-
-//    }
-
-
-//    return;
 
     QFile filex("/sys/class/thermal/thermal_zone0/temp");
 
-    float xx=0,yy=0,zz=0;
-    myscl300->SCL3300_Test();
-  xx =  myscl300->SCL3300_ReadAngle(0);
-   zz =  myscl300->SCL3300_ReadAngle(1);
-   yy= myscl300->SCL3300_ReadAngle(2)*(-1.0);
-   qDebug()<<xx<<yy<<zz;
 
+   //显示的值是绝对值加上标定值
+   float sxx = GpsystemStatus.x+GpsystemStatus.cx;
 
-   if(zz>0)
+   if(-0.099<sxx&&sxx<0.099)
    {
-       if(xx>0)
-       {
-           xx = zz+90;
-
-       }
-       else
-       {
-           xx = xx-90;
-       }
-   }
-
-   if(-0.099<xx&&xx<0.099)
-   {
-       xx=0;
+       sxx=0;
    }
 
    QString sx;
 
-   sx.append(QString::number(xx,'f',1));
+   sx.append(QString::number(sxx,'f',1));
    sx.append("°");
    ui->label_xang->clear();
    ui->label_xang->setText(sx);
 
-   GpsystemStatus.x = xx;
-
-
-    shownets();
 
 
 
-   if(-0.099<yy&&yy<0.099)
+
+
+
+   //显示的值是绝对值加上标定值
+   float syy = GpsystemStatus.y+GpsystemStatus.cy;
+   if(-0.099<syy&&syy<0.099)
    {
-       xx=0;
+       syy=0;
    }
-   QString syy;
+   QString sy;
 
-   syy.append(QString::number(yy,'f',1));
-   syy.append("°");
+   sy.append(QString::number(syy,'f',1));
+   sy.append("°");
 
-    ui->label_yang->clear();
-   ui->label_yang->setText(syy);
 
-   GpsystemStatus.x = xx;
-   GpsystemStatus.y = yy;
-   GpsystemStatus.z = zz;
 
-    QString stemp = QString::number(GpsystemStatus.temp, 'f', 1).append("℃");
+
+   ui->label_yang->setText(sy);
+
+   QString stemp = QString::number(GpsystemStatus.temp, 'f', 1).append("℃");
    ui->label_temp->setText(stemp);
 
     switch (icount)
@@ -282,19 +262,15 @@ void MainWindow::doscantimer()
             break;
 
         case 2:
-            if(whybmp280)
-            {
-                float fpress = whybmp280->bmp280_get_pressure()/1000;
-                GpsystemStatus.press = fpress;
 
-                GpsystemStatus.pressstatus = whybmp280->status;
 
-                QString sfpress = QString::number(fpress, 'f', 1).append("Kpa");
-                ui->label_press->setText(sfpress);
+        if(1)
+        {
+            QString sfpress = QString::number(GpsystemStatus.press, 'f', 1).append("Kpa");
+            ui->label_press->setText(sfpress);
+        }
 
-                qDebug()<<"press"<<fpress<<whybmp280->bmp280_get_temperature();
 
-            }
          break;
         case 3:
             #ifdef Q_OS_LINUX
@@ -331,6 +307,8 @@ void MainWindow::doscantimer()
 
 
     }
+    shownets();
+
     getLocalIpWithQt();
     if(!binit)
     {
@@ -542,6 +520,7 @@ void MainWindow::shownets()
 
     if(wifistatus)
     {
+        //要判断是否连接
 
         memset ( cmdbuf,0, 256 );
         memset ( cmdresult,0, 256 );
@@ -563,12 +542,37 @@ void MainWindow::shownets()
         else
         {
             //无线网络连接
+            //判断wlan0的ip地址是否有效
+            //先获取wlan0的ip地址
 
-            QString stext = QString(tr(":/wifi4.png"));
+            memset ( cmdbuf,0, 256 );
+            memset ( cmdresult,0, 256 );
+            sprintf ( cmdbuf, "ifconfig wlan0 | grep 'inet addr' | awk '{print $2}'" );
+            pp = popen ( cmdbuf, "r" ); //建立管道
+            fgets ( cmdresult, sizeof ( cmdresult ), pp ); 
+            pclose ( pp );
+            //判断是否有ip地址
+            if (strstr(cmdresult, "192.168"))
+            {
+				//有ip地址
+				//qDebug()<<"yes nolianjie";
+                QString stext = QString(tr(":/wifi4.png"));
 
-            QPixmap picno(stext);
+				QPixmap picno(stext);
 
-            ui->label_wifi->setPixmap(picno);
+				ui->label_wifi->setPixmap(picno);
+			}
+			else
+			{
+                //无线网络断开
+                
+
+
+                ui->label_wifi->setPixmap(QPixmap());
+
+            }
+
+
         }
     }
     else
@@ -598,7 +602,7 @@ void MainWindow::getLocalIpWithQt()
     //ui->com_Interface->clear();
     for(const QNetworkInterface& xinterface : interfaces)
     {
-        qDebug()<<xinterface.humanReadableName()<< xinterface.name();
+        //qDebug()<<xinterface.humanReadableName()<< xinterface.name();
         QHostAddress gateway;
         if(xinterface.name()=="wlan0")// 显示所有网络接口名称
         {
@@ -613,7 +617,7 @@ void MainWindow::getLocalIpWithQt()
                 case QAbstractSocket::IPv4Protocol:
 
                     strType = "--------IPv4地址--------";
-                    qDebug()<<entery.ip().toString();
+                    //qDebug()<<entery.ip().toString();
                     if(!Beth0)
                     ui->label_ip->setText(entery.ip().toString());
 
@@ -621,15 +625,15 @@ void MainWindow::getLocalIpWithQt()
                     break;
                 case QAbstractSocket::IPv6Protocol:
                     strType = "--------IPv6地址--------";
-                    qDebug()<<entery.ip().toString();
+                    //qDebug()<<entery.ip().toString();
                     break;
                 case QAbstractSocket::AnyIPProtocol:
                     strType = "--------IPv4或IPv6地址--------";
-                    qDebug()<<entery.ip().toString();
+                    //qDebug()<<entery.ip().toString();
                     break;
                 case QAbstractSocket::UnknownNetworkLayerProtocol:
                     strType = "--------未知地址--------";
-                    qDebug()<<entery.ip().toString();
+                    //qDebug()<<entery.ip().toString();
                     break;
                 }
 
@@ -653,7 +657,7 @@ void MainWindow::getLocalIpWithQt()
                     {
                         break;
                     }
-                    qDebug() << "eth0 IP address: " << ipAddress;
+                    //qDebug() << "eth0 IP address: " << ipAddress;
                 }
             }
 

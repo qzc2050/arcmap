@@ -1,7 +1,10 @@
 debug/ads118.o
+debug/anathread.o
 debug/bmp280.o
 debug/ddc2256.o
 debug/fbtft.o
+debug/gpio_contorl.o
+debug/iicthread.o
 debug/main.o
 debug/mainwindow.o
 debug/modbusslave.o
@@ -13,6 +16,8 @@ debug/moc_ads118.o
 debug/moc_bmp280.o
 debug/moc_ddc2256.o
 debug/moc_fbtft.o
+debug/moc_gpio_contorl.o
+debug/moc_iicthread.o
 debug/moc_mainwindow.o
 debug/moc_myiic.o
 debug/moc_scl300.o

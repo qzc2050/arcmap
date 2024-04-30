@@ -736,13 +736,13 @@ void FbTFT::run()
             }
 
             #endif
-            QThread::msleep(10);
+            QThread::msleep(5);
         }
 
         QThread::msleep(100);
 
         delete rgbData; // 释放rgbData内存
-        QThread::msleep(1000);
+        QThread::msleep(500);
    // }
 }
 void FbTFT::LCD_UpdateScreen()
@@ -965,7 +965,7 @@ FbTFT::FbTFT(QObject *parent) : QThread(parent)
 
 
     int bits = 8;             // 每个字节的位数
-    int speed = 100000000;      // 传输速度
+    int speed = 10000000;      // 传输速度
 
     ioctl(devfd, SPI_IOC_WR_MODE, &mode);       // 设置SPI模式
     ioctl(devfd, SPI_IOC_WR_BITS_PER_WORD, &bits);   // 设置每个字节的位数

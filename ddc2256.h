@@ -37,7 +37,7 @@ typedef enum{
     DDC2256_CHIP_2,
 }DDC2256_CHIP_X;
 
-
+//173 测试通道 IN174
 struct ddc2556_data_type_
 {
     uint16_t adc_vale[256];	//存放电荷量的量化值
@@ -97,7 +97,8 @@ public:
     void ddc2256_set_integral_cap(uint8_t p_cap);
     //测量本底
     void run() override;
-
+    void delayMs(int msec);
+    void check_bendi();
 
 signals:
     void onepictureok();

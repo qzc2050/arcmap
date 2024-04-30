@@ -27,7 +27,7 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">border-image: url(:/Frame 12(2).png);
+     <string notr="true">border-image: url(:/Frame1211.png);
 </string>
     </property>
     <property name="text">
@@ -37,7 +37,7 @@
    <widget class="QLabel" name="label_temp">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>105</x>
       <y>43</y>
       <width>51</width>
       <height>20</height>
@@ -61,7 +61,7 @@
    <widget class="QLabel" name="label_press">
     <property name="geometry">
      <rect>
-      <x>155</x>
+      <x>165</x>
       <y>43</y>
       <width>90</width>
       <height>20</height>
@@ -85,9 +85,9 @@
    <widget class="QLabel" name="label_xang">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>80</y>
-      <width>161</width>
+      <x>290</x>
+      <y>82</y>
+      <width>171</width>
       <height>51</height>
      </rect>
     </property>
@@ -111,9 +111,9 @@
    <widget class="QLabel" name="label_yang">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>140</y>
-      <width>161</width>
+      <x>290</x>
+      <y>135</y>
+      <width>171</width>
       <height>41</height>
      </rect>
     </property>

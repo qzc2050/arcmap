@@ -3,12 +3,10 @@
 #include "ddc2256.h"
 #include <QMainWindow>
 #include "tcpnetserver.h"
-#include "myiic.h"
-#include "ads118.h"
-#include "bmp280.h"
-#include "scl300.h"
+#include "iicthread.h"
 #include <modbusslave.h>
 #include "fbtft.h"
+#include "gpio_contorl.h"
 typedef struct
 {
     char productname[20];
@@ -58,8 +56,14 @@ typedef struct systemstatus
     float battvol;      //充放电电压
     float battcur;      //放电电流
     float battEnerg;    //电池电量 %;      //ads115通道4的值
-
-
+    float cx;           //x角度标定
+    float cy;           //y角度标定
+    float cz;           //z角度标定
+    int   chip0;        //chip0 状态
+    int   chip1;        //chip1 状态
+    int   chip2;        //chip2 状态
+    int   chip3;        //chip3 状态
+    int   bendi;        //本底状态
 }PsystemStatus;
 
 
@@ -81,16 +85,17 @@ public:
     TcpNetServer *tcpnetser;
     TcpNetServer *tcpnetser2;
     QTimer *myscantimer;
-    scl300 *myscl300;
+    iicThread *myiicthread;
     int icount;
     int iicfd;
-    myIIc *myiic;
+
     FbTFT *mytft;
     bool binit;
 //    xxDS2783     *whyds2783;
-    MYBMP280     *whybmp280;
+
 //    pcf8563      *mypcf8563;
-    ADS118       *myads115;
+    GPIO_CONTORL *mygpio;
+
     void initproinfo();
     RDSModbusSlave *modbusdevice;
      bool Beth0;

@@ -1,7 +1,7 @@
 #include "tcpnetserver.h"
 #define _NETWORK_CMD_C_
 #include "mainwindow.h"
-#if DEBUG_CODE
+#if 1
 #define DBG_PRINTF		printf
 #else
 #define DBG_PRINTF		//
@@ -1008,8 +1008,107 @@ void network_ack_set_angle_0(INT8U p_result)
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
 //	}
 }
+//network_ack_set_wifiname_api(NET_CMD_SET_SUCCESS);
+
+//返回 参数1：INT8U p_result，参数2：命令代码INT8U cmd_code
+//网络命令返回
+void network_ack_cmd_api(INT8U p_result, INT8U cmd_code)
+{
+    INT16U i;
+
+    network_send_cmd.len = 0;
+    //包头
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD & 0X00FF;
+
+    //设备类型
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_DEVICE_TYPE;
+
+    //命令代码
+    network_send_cmd.buf[network_send_cmd.len++] = cmd_code;
+
+    network_send_cmd.len += 2;//先跳过数据长度的保存
+
+    //数据区域
+    //结果
+    network_send_cmd.buf[network_send_cmd.len++] = p_result;
 
 
+    //数据长度字段填充
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
+
+    //计算校验和
+    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+
+    ////包尾
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
+}
+
+// network_ack_get_wifiname_api(NET_CMD_SET_SUCCESS,wifiname);
+
+//网络命令返回
+void network_ack_get_wifiname_api(INT8U p_result, INT8U *p_wifiname)
+{
+    INT16U i;         //网络命令返回
+
+    network_send_cmd.len = 0;
+    //包头
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD & 0X00FF;
+    //设备类型
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_DEVICE_TYPE;
+    //命令代码
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_CODE_GET_WIFINAME;
+    network_send_cmd.len += 2;//先跳过数据长度的保存
+    //数据区域
+    //结果
+    network_send_cmd.buf[network_send_cmd.len++] = p_result;
+    //wifi名称
+    for(i = 0; i < 32; i++)
+    {
+        network_send_cmd.buf[network_send_cmd.len++] = p_wifiname[i];
+    }
+    //数据长度字段填充
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
+    //计算校验和
+    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    //包尾
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
+}
+//网络命令返回
+void network_ack_get_wifipassword_api(INT8U p_result, INT8U *p_wifipass)
+{
+    INT16U i;         //网络命令返回
+    network_send_cmd.len = 0;
+    //包头
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD & 0X00FF;
+    //设备类型
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_DEVICE_TYPE;
+    //命令代码
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_CODE_GET_WIFIPASS;
+    network_send_cmd.len += 2;//先跳过数据长度的保存
+    //数据区域
+    //结果
+    network_send_cmd.buf[network_send_cmd.len++] = p_result;
+    //wifi名称
+    for(i = 0; i < 32; i++)
+    {
+        network_send_cmd.buf[network_send_cmd.len++] = p_wifipass[i];
+    }
+    //数据长度字段填充
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
+    //计算校验和
+    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    //包尾
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
+}
 INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
 {
     INT8U p_cmd;
@@ -1213,22 +1312,61 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
 
         case NET_CMD_CODE_SET_IP:	//设置IP
             {
-//                = p_data[NET_CMD_DATA_INDEX];
-//                = p_data[NET_CMD_DATA_INDEX + 1];
-//                = p_data[NET_CMD_DATA_INDEX + 2];
-//                = p_data[NET_CMD_DATA_INDEX + 3];
+                unsigned char tempip[4];
+                memset(tempip,0,4);
+                tempip[0]= p_data[NET_CMD_DATA_INDEX];
+                tempip[1]= p_data[NET_CMD_DATA_INDEX + 1];
+                tempip[2]= p_data[NET_CMD_DATA_INDEX + 2];
+                tempip[3]= p_data[NET_CMD_DATA_INDEX + 3];
+                
+                //把tempip转换成“192.16.2.1”的QString
+                QString ipstr = QString("%1.%2.%3.%4").arg(tempip[0]).arg(tempip[1]).arg(tempip[2]).arg(tempip[3]);
 
-//                ////at24cxx_write(SET_IP_STORE_STAR_ADDR, (INT8U *)&sys_data.store_data.set_net_ip[0], SET_IP_DATA_LEN);
+            
+                QHostAddress ipAddress(ipstr);
+                if(ipAddress.isNull())
+                {
+                    //如果ipAddress是null，说明ipString不是合法的IP地址 
+                    //返回异常响应
+                    network_ack_set_ip_api(NET_CMD_SET_FAIL);
+                }
+                else
+                {
+                    //如果ipAddress不是null，说明ipString是合法的IP地址
+                    //返回正常响应
+                    network_ack_set_ip_api(NET_CMD_SET_SUCCESS);
 
-                network_ack_set_ip_api(NET_CMD_SET_SUCCESS);
-                //delay_ms(20);
+                    //更新  GconfigNet的ip
+                    memset(GconfigNet.ip,0,16);
+                    for(int i=0;i<ipstr.length();i++)
+                    {
+                        //把ipsrt赋值给GconfigNet.ip
+                        GconfigNet.ip[i]=ipstr.at(i).toLatin1();
+                        // GconfigNet.ip[i]=ipstr.toStdString().c_str()[i];
+                    }
 
-                //w5500_set_ip(sys_data.store_data.set_net_ip);
+                    //如果ipAddress不是null，说明ipString是合法的IP地址
+                    //QSetting里面设置IP地址，groupname是eth0,key是ipeth0
+                    //把ipString保存到QSetting里面  
+                    QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+                    settings->beginGroup("eth0");
+                    settings->setValue("ipeth0",ipstr);
+                    settings->endGroup();
+                    settings->sync();
+                    delete  settings;  
+                    //返回正确响应
+                    //network_ack_cmd_api(INT8U p_result, INT8U cmd_code)
+                    network_ack_cmd_api(NET_CMD_SET_SUCCESS, NET_CMD_CODE_SET_IP);
 
-                //init_communication_mode();		//更新显示新的IP
-
-                //DBG_PRINTF("set ip = %d %d %d %d\r\n", sys_data.store_data.set_net_ip[0], sys_data.store_data.set_net_ip[1], sys_data.store_data.set_net_ip[2], sys_data.store_data.set_net_ip[3]);
-            }
+                
+                    //更新设备ip地址
+                    char cmdbuf[1024];
+                    memset ( cmdbuf, 0,1024 );
+                    QString ips = QString(GconfigNet.ip);
+                    sprintf ( cmdbuf, "ifconfig eth0 %s netmask 255.255.254.0",ipstr.toLatin1().data());
+                    system ( cmdbuf );
+                }
+            }   
             break;
 
         case NET_CMD_CODE_GET_FW_VER:	//获取固件版本号
@@ -1240,21 +1378,142 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
 
         case NET_CMD_CODE_SET_ANGLE_0:	//设置角度为0
             {
-                ////设置当前位置角度为0，读取当前角度，然后将校准值与当前值取反
-                //sys_data.store_data.adj_angle_value[0] = -sys_data.cur_angle_x;
-                //sys_data.store_data.adj_angle_value[1] = -sys_data.cur_angle_y;
-
-                //at24cxx_write(ADJ_ANGLE_VALUE_STORE_STAR_ADDR, (INT8U *)&sys_data.store_data.adj_angle_value[0], ADJ_ANGLE_VALUE_DATA_LEN);
-
-
-                //sys_data.angle_first_flag = 0;
-
-                //network_ack_set_angle_0(NET_CMD_SET_SUCCESS);
-
+                //设置当前位置角度为0，读取当前角度，然后将校准值与当前值取反
+                GpsystemStatus.cx =-GpsystemStatus.x;
+                GpsystemStatus.cy =-GpsystemStatus.y;
+                GpsystemStatus.cz =-GpsystemStatus.z;
+                //保存到setting group是cangle，key 分别是cx cy cz
+                 QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+                 settings->beginGroup("cangle");
+                 settings->setValue("cx",GpsystemStatus.cx);
+                 settings->setValue("cy",GpsystemStatus.cy);
+                 settings->setValue("cz",GpsystemStatus.cz);
+                 settings->endGroup();
+                 settings->sync();
+                 delete settings;
+                 network_ack_cmd_api(NET_CMD_SET_SUCCESS, 1);
 
             }
             break;
+        case NET_CMD_CODE_SET_WIFINAME:	//设置wifi名称
+            {
+            // #define NET_CMD_DATA_LEN_INDEX_1 (4)//数据长度
+            // #define NET_CMD_DATA_LEN_INDEX_2 (5)//数据长度
 
+            INT8U p_len = p_data[NET_CMD_DATA_LEN_INDEX_1];	//获取数据长度
+            QString wifiname = QString(QByteArray::fromRawData((const char*)&p_data[NET_CMD_DATA_INDEX], p_len));
+                            //ssid没法判断有没有效，所以不用判断直接保存
+            memset(GconfigNet.ssid,0,32);
+            for(int i=0;i<wifiname.length();i++)
+            {
+                //把wifiname赋值给GconfigNet.ssid
+                GconfigNet.ssid[i]=wifiname.at(i).toLatin1();
+            }
+            //更新设备的wifi名字 wifigroup 是wlan，key是wifiname
+            QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+            settings->beginGroup("wlan");
+            settings->setValue("wifiname",QString(GconfigNet.ssid));
+            settings->endGroup();
+            settings->sync();
+            delete  settings;
+            //写/etc/wpa_supplicant.conf
+            FILE* fp = fopen ( "/etc/wpa_supplicant.conf", "wb" );
+            if(fp == NULL)
+            {
+                //pline() << "None Encryption";
+
+                //return false;
+            }
+            fprintf ( fp, "ctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nap_scan=1\n\n" );
+
+            fprintf ( fp, "network={\n\tssid=\"%s\"\n\tpsk=\"%s\"\n\tpriority=2\n}\n", GconfigNet.ssid,GconfigNet.password);
+
+
+            fclose(fp);
+            //返回正确响应
+            network_ack_cmd_api(NET_CMD_SET_SUCCESS, NET_CMD_CODE_SET_WIFINAME);
+
+           
+            }
+            break;
+
+        case NET_CMD_CODE_SET_WIFIPASS:	//设置wifi密码
+            {
+                // #define NET_CMD_DATA_LEN_INDEX_1 (4)//数据长度
+                // #define NET_CMD_DATA_LEN_INDEX_2 (5)//数据长度   
+                INT8U p_len = p_data[NET_CMD_DATA_LEN_INDEX_1];	//获取数据长度
+                QString wifipassword = QString(QByteArray::fromRawData((const char*)&p_data[NET_CMD_DATA_INDEX], p_len));
+                //wifi密码没法判断有没有效，所以不用判断直接保存
+                memset(GconfigNet.password,0,32);
+                for(int i=0;i<wifipassword.length();i++)
+                {
+                    //把wifipassword赋值给GconfigNet.password
+                    GconfigNet.password[i]=wifipassword.at(i).toLatin1();
+                }
+                //更新设备的wifi密码 wifigroup 是wlan，key是wifipassword
+
+                QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+                settings->beginGroup("wlan");
+                settings->setValue("wifipassword",QString(GconfigNet.password));
+                settings->endGroup();    
+                settings->sync();
+                delete  settings;
+                //写/etc/wpa_supplicant.conf
+                FILE* fp = fopen ( "/etc/wpa_supplicant.conf", "wb" );
+                if(fp == NULL)
+                {
+                    //pline() << "None Encryption";
+
+                    //return false;
+                }
+                fprintf ( fp, "ctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nap_scan=1\n\n" );
+
+                fprintf ( fp, "network={\n\tssid=\"%s\"\n\tpsk=\"%s\"\n\tpriority=2\n}\n", GconfigNet.ssid,GconfigNet.password);
+
+
+                fclose(fp);
+                //返回正确响应
+                network_ack_cmd_api(NET_CMD_SET_SUCCESS, NET_CMD_CODE_SET_WIFIPASS);
+            }
+            break;
+            
+        case NET_CMD_CODE_GET_WIFINAME:	//读取wifi名称
+            {
+                //读取设备的wifi名字 wifigroup 是wlan，key是wifiname
+                QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+                settings->beginGroup("wlan");
+                QString wifiname = settings->value("wifiname").toString();
+                settings->endGroup();    
+                delete  settings;
+                //返回正确响应
+               
+                QByteArray wifiNameUtf8 = wifiname.toUtf8();
+                 // 现在将 char * 转换为 unsigned char *
+                 unsigned char *wifiNameUChar = (unsigned char *)wifiNameUtf8.data();
+                 network_ack_get_wifiname_api(NET_CMD_SET_SUCCESS,wifiNameUChar);
+
+            }
+            break;
+            
+        case NET_CMD_CODE_GET_WIFIPASS:	//读取wifi密码
+            {
+                //读取设备的wifi密码 wifigroup 是wlan，key是wifipassword            
+                QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+                settings->beginGroup("wlan");
+                QString wifipassword = settings->value("wifipassword").toString();              
+                settings->endGroup();    
+                delete  settings;
+                //返回正确响应,INT8U *p_wifipass
+            
+                QByteArray wifiPasswordUtf8 = wifipassword.toUtf8();
+
+                // 现在将 char * 转换为 unsigned char *
+                unsigned char *wifiPasswordUChar = reinterpret_cast<unsigned char *>(wifiPasswordUtf8.data());
+
+
+                network_ack_get_wifipassword_api(NET_CMD_SET_SUCCESS,wifiPasswordUChar);
+            }
+            break;
 
 
         default:
@@ -1592,29 +1851,42 @@ void TcpNetServer::onReadyRead()
         QHostAddress readaddresss =clientSocket->peerAddress();
 //        if(readaddresss.)
 //        {
-            qDebug() << "Received data from"  <<iport<<clientSocket->peerAddress().toString() << ":" << datarecv;
+            qDebug() << "Received data from"  <<iport<<clientSocket->peerAddress().toString() << ":" << datarecv.toHex();
 //            return;
 
 //        }
 //"\x12""4\x01\x07\x00\x00\xB2Vx"
         // 在这里处理接收到的数据
             network_send_cmd.len=0;
-            if(datarecv.contains("ceshi"))
+            if(datarecv.contains("bgtest"))
             {
                  mode=1;
+                 datarecv.append("ok");
 //                if(datarecv.contains("e"))
 //                {
 //                   mode=1;
 //                   qDebug()<<"modee 1111";
 //                }
+                 //QByteArray data((const char *)network_send_cmd.buf,network_send_cmd.len);
+                 currentconnect->write(datarecv,datarecv.length());
+            }
+            else if(datarecv.contains("hvtest"))
+            {
+                datarecv.append("ok");
+                GDebugMoni =1;
+                currentconnect->write(datarecv,datarecv.length());
+            }
+            else
+            {
+                INT8U result = process_socket1_cmd(reinterpret_cast<INT8U*>(datarecv.data()), datarecv.size());
+
+                QByteArray data((const char *)network_send_cmd.buf,network_send_cmd.len);
+                currentconnect->write(data,network_send_cmd.len);
             }
 
 
 
-            INT8U result = process_socket1_cmd(reinterpret_cast<INT8U*>(datarecv.data()), datarecv.size());
 
-            QByteArray data((const char *)network_send_cmd.buf,network_send_cmd.len);
-            currentconnect->write(data,network_send_cmd.len);
 
         // 示例：发送回复数据给客户端
        // clientSocket->write("Server reply: " + data);

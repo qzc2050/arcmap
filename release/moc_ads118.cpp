@@ -61,7 +61,7 @@ static const uint qt_meta_data_ADS118[] = {
  // slots: name, argc, parameters, tag, flags
        1,    1,   29,    2, 0x0a /* Public */,
        5,    1,   32,    2, 0x0a /* Public */,
-       6,    0,   35,    2, 0x08 /* Private */,
+       6,    0,   35,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void, 0x80000000 | 3,    4,

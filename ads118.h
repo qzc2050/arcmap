@@ -51,9 +51,10 @@ signals:
 public slots:
     void ads1115_config_channel(uint8_t channel);
     float ads1115_read_ad_vale(uint8_t channel);
+    void doadstimer();
 
 private slots:
-    void doadstimer();
+
 
 };
 

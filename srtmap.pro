@@ -17,9 +17,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     ads118.cpp \
+    anathread.cpp \
     bmp280.cpp \
     ddc2256.cpp \
     fbtft.cpp \
+    gpio_contorl.cpp \
+    iicthread.cpp \
     main.cpp \
     mainwindow.cpp \
     modbusslave.cpp \
@@ -29,9 +32,12 @@ SOURCES += \
 
 HEADERS += \
     ads118.h \
+    anathread.h \
     bmp280.h \
     ddc2256.h \
     fbtft.h \
+    gpio_contorl.h \
+    iicthread.h \
     mainwindow.h \
     modbusslave.h \
     myiic.h \

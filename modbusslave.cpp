@@ -6,6 +6,7 @@
 #include <QModbusResponse>
 #include <mainwindow.h>
 #include <QSettings>
+#include "gpio_contorl.h"
 //#include "collect_save.h"
 //#include <QModbusResponsePdu>
 
@@ -141,10 +142,10 @@ QModbusResponse RDSModbusSlave::handleWriteSingleCoil(const QModbusPdu &request)
 
     if(startAddress<16)
     {
-//        if(registerCount==0xff00)
-//            //set_gpio_value(startAddress,1);
-//        else
-//            //set_gpio_value(startAddress,0);
+        if(registerCount==0xff00)
+            set_gpio_value(startAddress,1);
+        else
+            set_gpio_value(startAddress,0);
     }
     else if(startAddress==1000)
     {
@@ -161,6 +162,43 @@ QModbusResponse RDSModbusSlave::handleWriteSingleCoil(const QModbusPdu &request)
             GDebugMoni =1;
         else
             GDebugMoni =0;
+    }
+    else if (startAddress == 1002)
+    {
+        //标定x y z
+        if (registerCount == 0xff00)
+        {
+            //设置当前位置角度为0，读取当前角度，然后将校准值与当前值取反
+            GpsystemStatus.cx = -GpsystemStatus.x;
+            GpsystemStatus.cy = -GpsystemStatus.y;
+            GpsystemStatus.cz = -GpsystemStatus.z;
+            //保存到setting group是cangle，key 分别是cx cy cz
+            QSettings* settings = new QSettings("set.ini", QSettings::IniFormat);
+            settings->beginGroup("cangle");
+            settings->setValue("cx", GpsystemStatus.cx);
+            settings->setValue("cy", GpsystemStatus.cy);
+            settings->setValue("cz", GpsystemStatus.cz);
+            settings->endGroup();
+            settings->sync();
+            delete settings;
+		}
+        else
+        {
+            //取消标定
+            GpsystemStatus.cx = 0;
+            GpsystemStatus.cy = 0;
+            GpsystemStatus.cz = 0;
+            QSettings* settings = new QSettings("set.ini", QSettings::IniFormat);
+            settings->beginGroup("cangle");
+            settings->setValue("cx", GpsystemStatus.cx);
+            settings->setValue("cy", GpsystemStatus.cy);
+            settings->setValue("cz", GpsystemStatus.cz);
+            settings->endGroup();
+            settings->sync();
+            delete settings;
+            
+		
+        }
     }
 
     qDebug() << toHexadecimal(requestData);
@@ -198,7 +236,7 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
 
     if(startAddress < 500)
     {
-        int iistartAddress = startAddress - 500;
+        int iistartAddress = startAddress;
         qDebug() << startAddress << iistartAddress << registerCount;
         
         //有线IP地址，wifi名字，wifi的密码
@@ -260,7 +298,7 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
                 char cmdbuf[1024];
                 memset ( cmdbuf, 0,1024 );
                 QString ips = QString(GconfigNet.ip);
-                sprintf ( cmdbuf, "ifconfig eth0 %s netmask 255.255.254.0",ips.toLatin1().data());
+                sprintf ( cmdbuf, "ifconfig eth0 %s netmask 255.255.254.0",ipString.toLatin1().data());
                 system ( cmdbuf );
 
             }                
@@ -304,6 +342,7 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
             responsedata[1] = requestData.at(1);
             responsedata[2] = requestData.at(2);
             responsedata[3] = requestData.at(3);
+            system("sync");
         }
         else if((startAddress==124)&&(registerCount<17))//wifi的密码
         {
@@ -337,6 +376,7 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
 
             fclose(fp);
             //返回正确响应
+            system("sync");
 
             responsedata[0] = requestData.at(0);
             responsedata[1] = requestData.at(1);
@@ -508,7 +548,7 @@ QModbusResponse RDSModbusSlave::handleReadHoldingRegisters(const QModbusPdu &req
     {
         //100到500是ip wifi名 和密码 GconfigNet
         char* netConfigChar = reinterpret_cast<char*>(&GconfigNet);
-        unsigned int iistartAddress = startAddress-100;
+        unsigned int iistartAddress = (startAddress-100)*2;
         qDebug()<<iistartAddress<<startAddress<<registerCount<<sizeof (CONFIG_TYPE_NET);
          if(registerCount<((sizeof(CONFIG_TYPE_NET)/2)+1))
          {
@@ -527,6 +567,8 @@ QModbusResponse RDSModbusSlave::handleReadHoldingRegisters(const QModbusPdu &req
              responsedata[1] = 0x02;  // Modbus 异常码（这里使用自定义的异常码，具体根据协议定义进行选择）
              responsedata[2] = 0x04;  // 附加异常数据（根据协议定义）
          }
+        qDebug()<<toHexadecimal(responsedata);
+        response.setData(responsedata);
 
     }
     else if(startAddress<1000)
