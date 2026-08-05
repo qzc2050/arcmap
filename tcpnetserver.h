@@ -13,7 +13,7 @@
 #define _NETWORK_CMD_C_EXT_  extern
 #define _NETWORK_CMD_C_EXT_INT_ extern
 #endif
-
+extern int Goldmode;
 //数据上传套接字编号
 #define DATA_UPLOAD_SOCKET_NUM (0)
 //设置设备套接字编号
@@ -55,7 +55,7 @@
 #define NET_CMD_CODE_WRITE_CORRECTION_FACTOR (8)	//写修正系数
 #define NET_CMD_CODE_READ_CORRECTION_FACTOR (9)	//读修正系数
 #define NET_CMD_CODE_SET_IP (10)	//设置IP
-#define NET_CMD_CODE_GET_FW_VER (11)	//获取固件版本号
+#define NET_CMD_CODE_GET_FW_VER (11)	//获取固件版本号（应答：结果1字节 + softver字符串最多20字节）
 #define NET_CMD_CODE_SET_ANGLE_0 (12)	//设置当前位置角度为0
 #define NET_CMD_CODE_SET_WIFINAME (13)	//设置wifi名称
 #define NET_CMD_CODE_SET_WIFIPASS (14)	//设置wifi密码
@@ -64,7 +64,18 @@
 //读wifi密码
 #define NET_CMD_CODE_GET_WIFIPASS (16)
 //读取角度
-#define NET_CMD_CODE_GET_WIFIPASS (17)
+#define NET_CMD_CODE_GET_ANGLE (17)
+
+//读取电离室厚度
+#define NET_CMD_CODE_GET_DLSHD (18)
+//设置网络管理服务 telnet/ftp/http/ssh，数据区1字节：0=关 非0=开
+#define NET_CMD_CODE_SET_NET_SERVICES (19)
+//读取网络管理服务开关状态
+#define NET_CMD_CODE_GET_NET_SERVICES (20)
+//获取硬件版本号（应答数据：结果1字节 + hardver字符串最多20字节）
+#define NET_CMD_CODE_GET_HW_VER (21)
+//设置硬件版本号（请求数据区：硬件版本字符串，最多20字节）
+#define NET_CMD_CODE_SET_HW_VER (22)
 //数据长度位置引索
 #define NET_CMD_HEAD_INDEX_1 (0)//同步头
 #define NET_CMD_HEAD_INDEX_2 (1)
@@ -131,7 +142,7 @@
 
 struct network_send_cmd__
 {
-    uint8_t buf[3600];
+    uint8_t buf[8192];
     uint16_t len;
 };
 
@@ -151,6 +162,9 @@ enum net_mode_update_task_event_table_
 };
 
 
+
+/** 写 /etc/wpa_supplicant.conf（tmp+rename+fsync）；ssid 为空则拒绝 */
+bool writeWpaSupplicantConf(const char *ssid, const char *password);
 
 class TcpNetServer : public QObject
 {
@@ -180,6 +194,9 @@ private:
     QList<QTcpSocket*> clients;
 
 signals:
+    /** 控制口（如 5001）上位机连上 / 断开 */
+    void hostClientConnected();
+    void hostClientDisconnected();
 
 };
 

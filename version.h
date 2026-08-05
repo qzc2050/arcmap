@@ -1,0 +1,16 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+/* ArcMap-II 固件版本：发版时只改本文件 */
+
+#define ARCMAP_VERSION_MAJOR    1
+#define ARCMAP_VERSION_MINOR    1
+#define ARCMAP_VERSION_PATCH    1
+#define ARCMAP_VERSION_DATE     "20260803"
+#define ARCMAP_VERSION_RELEASE  "R"
+
+#define ARCMAP_VERSION_STRING   "V1.1.1.20260803R"
+
+#define ARCMAP_HW_VERSION_DEFAULT   "01010101"
+
+#endif /* VERSION_H */

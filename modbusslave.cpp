@@ -138,11 +138,11 @@ QModbusResponse RDSModbusSlave::handleWriteSingleCoil(const QModbusPdu &request)
     quint16 startAddress = x * 256 + y;
     x = requestData.at(2);
     y = requestData.at(3);
-    quint16 registerCount = x * 256 + y;
+    quint16 registervalue = x * 256 + y;
 
     if(startAddress<16)
     {
-        if(registerCount==0xff00)
+        if(registervalue==0xff00)
             set_gpio_value(startAddress,1);
         else
             set_gpio_value(startAddress,0);
@@ -158,15 +158,28 @@ QModbusResponse RDSModbusSlave::handleWriteSingleCoil(const QModbusPdu &request)
     }
     else if(startAddress==1001)
     {
-        if(registerCount==0xff00)
-            GDebugMoni =1;
+
+
+        if(registervalue==0xff00)
+        {
+
+            GpsystemStatus.oldprotol=1;
+            Goldmode=1;
+            //HVTEST =1
+        }
         else
-            GDebugMoni =0;
+        {
+            GpsystemStatus.oldprotol=0;
+            Goldmode=0;
+        }
+
+
+
     }
     else if (startAddress == 1002)
     {
         //标定x y z
-        if (registerCount == 0xff00)
+        if (registervalue == 0xff00)
         {
             //设置当前位置角度为0，读取当前角度，然后将校准值与当前值取反
             GpsystemStatus.cx = -GpsystemStatus.x;
@@ -198,6 +211,68 @@ QModbusResponse RDSModbusSlave::handleWriteSingleCoil(const QModbusPdu &request)
             delete settings;
             
 		
+        }
+    }
+    else if(startAddress==1003)
+    {
+        if(registervalue==0xff00)
+        {
+            GDebugMoni =1;
+            GpsystemStatus.HVTEST=1;
+            //HVTEST =1
+        }
+        else
+        {
+            GpsystemStatus.HVTEST=0;
+            GDebugMoni =0;
+        }
+
+    }
+    else if(startAddress==1004)
+    {
+        if(registervalue==0xff00)
+        {
+            QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+            settings->beginGroup("wlan0");
+            settings->setValue("enable",1);
+            settings->endGroup();
+            settings->sync();
+            delete  settings;
+            GpsystemStatus.wifienable = 1;
+        }
+        else
+        {
+            QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+            settings->beginGroup("wlan0");
+            settings->setValue("enable",0);
+            settings->endGroup();
+            settings->sync();
+            delete  settings;
+            GpsystemStatus.wifienable = 0;
+        }
+
+    }
+    else if(startAddress==1005)
+    {
+        QSettings settings("set.ini", QSettings::IniFormat);
+        settings.beginGroup("netservices");
+        if(registervalue==0xff00)
+        {
+            settings.setValue("enable", 1);
+            settings.endGroup();
+            settings.sync();
+            GpsystemStatus.netservices = 1;
+            applyNetServicesChmod(true);
+            qDebug() << "netservices enabled (coil 1005)";
+        }
+        else
+        {
+            settings.setValue("enable", 0);
+            settings.endGroup();
+            settings.sync();
+            GpsystemStatus.netservices = 0;
+            applyNetServicesChmod(false);
+            qDebug() << "netservices disabled (coil 1005)";
         }
     }
 
@@ -234,7 +309,91 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
     qDebug() << startAddress << registerCount << byteCount;
 
 
-    if(startAddress < 500)
+    if(startAddress < 100)
+
+    {
+        if (startAddress + registerCount * 2 > sizeof(CONFIG_TYPE_SETING))
+        {
+            qDebug() << "Invalid start address or register count!";
+            responsedata[0] = 0x83;   // Modbus 异常响应功能码
+            responsedata[1] = 0x02;   // 异常码（非法地址）
+            responsedata[2] = 0x04;   // 附加异常数据
+        }
+        else
+        {
+            // 确保 registerCount 是偶数，因为每两个寄存器构成一个 int
+            if (registerCount % 2 != 0)
+            {
+                qDebug() << "Register count must be an even number!";
+                responsedata[0] = 0x83;   // Modbus 异常响应功能码
+                responsedata[1] = 0x03;   // 异常码（非法寄存器数量）
+                responsedata[2] = 0x04;   // 附加异常数据
+            }
+            else if(startAddress%2 != 0)
+            {
+                qDebug() << "startAddress count must be an even number!";
+                responsedata[0] = 0x83;   // Modbus 异常响应功能码
+                responsedata[1] = 0x03;   // 异常码（非法寄存器数量）
+                responsedata[2] = 0x04;   // 附加异常数据
+            }
+            else
+            {
+//                // 正常写入逻辑
+//                // 假设 CONFIG_TYPE_SETING 是存储寄存器值的结构体数组
+//                for (int i = 0; i < registerCount / 2; ++i)
+//                {
+//                    // 每两个寄存器存储一个 int
+//                    uint16_t low = requestData.mid(5 + i * 4, 2).toUInt();
+//                    uint16_t high = requestData.mid(7 + i * 4, 2).toUInt();
+
+//                    int value = (high << 16) | low; // 合并两个寄存器的值为一个 int
+//                    if(i==0)
+//                    {
+//                        GSeting.jifendianrong = value;
+//                    }
+//                    else if(i==1)
+//                    {
+//                         GSeting.beiyong = value;
+//                    }
+//                    else  if(i==2)
+//                    {
+//                        GSeting.batty = value;
+//                    }
+
+//                }
+                if((startAddress==2)&&(registerCount==2))
+                {
+                    uint16_t low = requestData.at(5)<<8|requestData.at(6);
+                    uint16_t high = requestData.at(7)<<8|requestData.at(8); // 修正高16位的获取方式
+                    int value = (high << 16) | low; // 合并两个寄存器的值为一个 int
+                    GSeting.beiyong = value;
+
+                    qDebug()<<"yes set GSeting.beiyong"<<GSeting.beiyong;
+                    QSettings settings("set.ini", QSettings::IniFormat);
+                    settings.beginGroup("GconfigSetting");
+                    settings.setValue("jifendianrong", GSeting.jifendianrong);
+                    settings.setValue("beiyong", GSeting.beiyong);
+                    settings.setValue("batty", GSeting.batty);
+                    settings.endGroup();
+                    settings.sync();
+                }
+
+                responsedata[0] = requestData.at(0);
+                responsedata[1] = requestData.at(1);
+                responsedata[2] = requestData.at(2);
+                responsedata[3] = requestData.at(3);
+            }
+        }
+        //Gsetting 可以单个设置
+        //        typedef struct
+        //        {
+        //            int jifendianrong;
+        //            int beiyong;//
+        //            int batty;
+        //        }CONFIG_TYPE_SETING ;
+
+    }
+    else if(startAddress < 500)
     {
         int iistartAddress = startAddress;
         qDebug() << startAddress << iistartAddress << registerCount;
@@ -294,12 +453,7 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
                 responsedata[2] = requestData.at(2);
                 responsedata[3] = requestData.at(3);
             
-                 //更新设备ip地址
-                char cmdbuf[1024];
-                memset ( cmdbuf, 0,1024 );
-                QString ips = QString(GconfigNet.ip);
-                sprintf ( cmdbuf, "ifconfig eth0 %s netmask 255.255.254.0",ipString.toLatin1().data());
-                system ( cmdbuf );
+                applyEth0IpDelayed(ipString);
 
             }                
             
@@ -315,27 +469,18 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
             {
                 GconfigNet.ssid[i] = requestData.at(5+i);   
             }
-            //更新设备的wifi名字 wifigroup 是wlan，key是wifiname
+            // 与启动加载、TCP5001 对齐：写 ssid，并同步旧键 wifiname
             QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+            settings->beginGroup("wlan0");
+            settings->setValue("ssid", QString::fromLatin1(GconfigNet.ssid));
+            settings->setValue("wifiname", QString::fromLatin1(GconfigNet.ssid));
+            settings->endGroup();
             settings->beginGroup("wlan");
-            settings->setValue("wifiname",QString(GconfigNet.ssid));
+            settings->setValue("wifiname", QString::fromLatin1(GconfigNet.ssid));
             settings->endGroup();
             settings->sync();
             delete  settings;
-            //写/etc/wpa_supplicant.conf
-            FILE* fp = fopen ( "/etc/wpa_supplicant.conf", "wb" );
-            if(fp == NULL)
-            {
-                //pline() << "None Encryption";
-
-                //return false;
-            }
-            fprintf ( fp, "ctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nap_scan=1\n\n" );
-
-            fprintf ( fp, "network={\n\tssid=\"%s\"\n\tpsk=\"%s\"\n\tpriority=2\n}\n", GconfigNet.ssid,GconfigNet.password);
-
-
-            fclose(fp);
+            writeWpaSupplicantConf(GconfigNet.ssid, GconfigNet.password);
             //返回正确响应
 
             responsedata[0] = requestData.at(0);
@@ -353,28 +498,18 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
             {
                 GconfigNet.password[i] = requestData.at(5+i);       
             }
-            //更新设备的wifi密码 wifigroup 是wlan，key是wifipassword
+            // 与启动加载、TCP5001 对齐：写 password，并同步旧键 wifipassword
             QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+            settings->beginGroup("wlan0");
+            settings->setValue("password", QString::fromLatin1(GconfigNet.password));
+            settings->setValue("wifipassword", QString::fromLatin1(GconfigNet.password));
+            settings->endGroup();
             settings->beginGroup("wlan");
-            settings->setValue("wifipassword",QString(GconfigNet.password));        
+            settings->setValue("wifipassword", QString::fromLatin1(GconfigNet.password));
             settings->endGroup();
             settings->sync();
             delete  settings;
-            //写/etc/wpa_supplicant.conf
-            //写/etc/wpa_supplicant.conf
-            FILE* fp = fopen ( "/etc/wpa_supplicant.conf", "wb" );
-            if(fp == NULL)
-            {
-                //pline() << "None Encryption";
-
-                //return false;
-            }
-            fprintf ( fp, "ctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nap_scan=1\n\n" );
-
-            fprintf ( fp, "network={\n\tssid=\"%s\"\n\tpsk=\"%s\"\n\tpriority=2\n}\n", GconfigNet.ssid,GconfigNet.password);
-
-
-            fclose(fp);
+            writeWpaSupplicantConf(GconfigNet.ssid, GconfigNet.password);
             //返回正确响应
             system("sync");
 
@@ -407,6 +542,23 @@ QModbusResponse RDSModbusSlave::handleWriteHoldingRegisters(const QModbusPdu &re
             settings->sync();
             settings->endGroup();
             delete  settings;
+        }
+        else if((iistartAddress==30)&&registerCount<11)
+        {
+            // hardver，寄存器 530，最多 20 字节（如 8 字符 01010101 写 4 寄存器）
+            memset(GproductInfo.hardver, 0, sizeof(GproductInfo.hardver));
+            for (int i = 0; i < registerCount * 2 && i < (int)sizeof(GproductInfo.hardver); i++)
+            {
+                GproductInfo.hardver[i] = requestData.at(5 + i);
+            }
+            GproductInfo.hardver[sizeof(GproductInfo.hardver) - 1] = '\0';
+
+            QSettings *settings = new QSettings("set.ini", QSettings::IniFormat);
+            settings->beginGroup("GproductInfo");
+            settings->setValue("hardwareversion", QString::fromUtf8(GproductInfo.hardver));
+            settings->sync();
+            settings->endGroup();
+            delete settings;
         }
         responsedata[0] = requestData.at(0);
         responsedata[1] = requestData.at(1);
@@ -542,7 +694,45 @@ QModbusResponse RDSModbusSlave::handleReadHoldingRegisters(const QModbusPdu &req
     qDebug()<<startAddress<<registerCount;
     if(startAddress<100)
     {
-        //
+        //GSeting
+        unsigned int iistartAddress = startAddress;
+        qDebug()<<iistartAddress<<startAddress<<registerCount<<sizeof (CONFIG_TYPE_SETING);
+
+
+        if(registerCount== 2)
+        {
+            if(startAddress == 2)
+            {
+                int i=1;
+                char* csetting = reinterpret_cast<char*>(&GSeting);
+                responsedata.resize(registerCount*2+1);
+                responsedata[0] =  registerCount*2;
+
+                responsedata[1] = (GSeting.beiyong>>8)&0xff ;
+                responsedata[2] = GSeting.beiyong&0xff ;
+
+                responsedata[3] = (GSeting.beiyong>>24)&0xff ;
+                responsedata[4] = (GSeting.beiyong>>16)&0xff  ;
+
+                //responsedata[2] = GSeting.beiyong>>16&0xffff;
+
+            }
+
+
+
+
+        }
+        else
+        {
+            //返回异常
+             qDebug()<<(iistartAddress+registerCount)*2;
+            responsedata.resize(3);  // 异常响应的数据大小为3
+            responsedata[0] = 0x83;  // Modbus 异常响应功能码
+            responsedata[1] = 0x02;  // Modbus 异常码（这里使用自定义的异常码，具体根据协议定义进行选择）
+            responsedata[2] = 0x04;  // 附加异常数据（根据协议定义）
+        }
+        qDebug()<<toHexadecimal(responsedata);
+        response.setData(responsedata);
     }
     else if(startAddress<500)
     {
@@ -695,25 +885,34 @@ QModbusResponse RDSModbusSlave::handleReadInputRegisters(const QModbusPdu &reque
 
     if(startAddress<1000)
     {
+        syncNetServicesFromIni();
+        syncWifiEnableFromIni();
         // PsystemStatus
         QDataStream stream(&byteArraysystem, QIODevice::WriteOnly);
         stream.writeRawData(reinterpret_cast<const char*>(&GpsystemStatus), sizeof(PsystemStatus));
+        qDebug() << "ReadInputRegisters status sizeof" << byteArraysystem.size()
+                 << "start" << startAddress << "count" << registerCount;
         if(((startAddress+registerCount)*2)>byteArraysystem.size())
         {
-            //返回异常
-            responsedata.resize(3);  // 异常响应的数据大小为3
-            responsedata[0] = 0x83;  // Modbus 异常响应功能码
-            responsedata[1] = 0x02;  // Modbus 异常码（这里使用自定义的异常码，具体根据协议定义进行选择）
-            responsedata[2] = 0x04;  // 附加异常数据（根据协议定义）
-
+            // 合法 Modbus 异常：功能码|0x80 + 异常码 0x02
+            // 不用 QModbusResponse(fc, data...) 模板（Qt5.9 易踩 ExceptionCode 断言）
+            responsedata.resize(1);
+            responsedata[0] = static_cast<char>(0x02); // Illegal Data Address
+            response.setFunctionCode(
+                QModbusPdu::FunctionCode(QModbusPdu::ReadInputRegisters | 0x80));
+            response.setData(responsedata);
+            return response;
         }
         else
         {
+            // startAddress 为字偏移，与上位机约定一致（byteIndex = startAddress * 2）
+            responsedata.resize(registerCount * 2 + 1);
             responsedata[0] =  registerCount*2;
             for(int i= 0;i<(registerCount);i++)
             {
-                responsedata[1+i*2] = byteArraysystem[startAddress+2*i];
-                responsedata[1+i*2+1] = byteArraysystem[startAddress+2*i+1];
+                const int byteIndex = startAddress * 2 + 2 * i;
+                responsedata[1+i*2] = byteArraysystem[byteIndex];
+                responsedata[1+i*2+1] = byteArraysystem[byteIndex+1];
             }
         }
 

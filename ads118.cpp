@@ -12,7 +12,7 @@
 #define TEMPERATURE_REFERENCE_RES (10.0f)    //10K
 
 
-//热敏电阻阻值表   型号：CMFB 103F3435 （10K+—1%）
+//热敏电阻阻值表   型号：CMFB 103F3450 （10K+—1%）
 //5℃-50℃电阻值表，一个数据间隔一℃
 const double resistor_vale_table[] =
 {
@@ -534,7 +534,7 @@ float  ADS118::ads1115_read_ad_vale(uint8_t channel)
     vol = ads1115_read_two_byte(ADS1015_REG_POINTER_CONVERT);
 
     fvol = (float (vol)*ADS1115_MAX_MEASURED_POSITIVE_VOL)/ADS1115_MAX_MEASURED_POSITIVE_AD_VALUE;
-    qDebug()<<"ads1115_read_ad_vale channel "<< channel<<"value" <<fvol;
+    // qDebug()<<"ads1115_read_ad_vale channel "<< channel<<"value" <<fvol;
    // qDebug()<<"ads1115_read_vol_vale"<<fvol;
 
     //3.3 v时是开路状态

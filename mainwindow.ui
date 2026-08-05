@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
-    <height>320</height>
+    <width>960</width>
+    <height>360</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,12 +22,12 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>480</width>
-      <height>320</height>
+      <width>960</width>
+      <height>376</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">border-image: url(:/Frame1211.png);
+     <string notr="true">background-color: rgb(0, 0,255);
 </string>
     </property>
     <property name="text">
@@ -37,15 +37,15 @@
    <widget class="QLabel" name="label_temp">
     <property name="geometry">
      <rect>
-      <x>105</x>
-      <y>43</y>
-      <width>51</width>
-      <height>20</height>
+      <x>210</x>
+      <y>40</y>
+      <width>131</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>8</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -61,15 +61,15 @@
    <widget class="QLabel" name="label_press">
     <property name="geometry">
      <rect>
-      <x>165</x>
-      <y>43</y>
-      <width>90</width>
-      <height>20</height>
+      <x>420</x>
+      <y>40</y>
+      <width>321</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>8</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -85,24 +85,24 @@
    <widget class="QLabel" name="label_xang">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>82</y>
-      <width>171</width>
-      <height>51</height>
+      <x>530</x>
+      <y>100</y>
+      <width>391</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>30</pointsize>
+      <pointsize>8</pointsize>
       <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(254, 245, 0);</string>
+     <string notr="true">color: rgb(255,255, 255);</string>
     </property>
     <property name="text">
-     <string/>
+     <string>1</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -111,25 +111,25 @@
    <widget class="QLabel" name="label_yang">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>135</y>
-      <width>171</width>
-      <height>41</height>
+      <x>530</x>
+      <y>170</y>
+      <width>391</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>30</pointsize>
+      <pointsize>8</pointsize>
       <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(254, 245, 0);
+     <string notr="true">color: rgb(255, 255, 255);
 </string>
     </property>
     <property name="text">
-     <string/>
+     <string>2</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -138,15 +138,15 @@
    <widget class="QLabel" name="label_ip">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>183</y>
-      <width>141</width>
-      <height>40</height>
+      <x>300</x>
+      <y>240</y>
+      <width>351</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>8</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -157,10 +157,13 @@
     </property>
    </widget>
    <widget class="QLabel" name="label_wifi">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>43</y>
+      <x>830</x>
+      <y>50</y>
       <width>20</width>
       <height>20</height>
      </rect>
@@ -173,10 +176,13 @@
     </property>
    </widget>
    <widget class="QLabel" name="label_eth0">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>43</y>
+      <x>750</x>
+      <y>50</y>
       <width>20</width>
       <height>20</height>
      </rect>
@@ -186,6 +192,126 @@
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>240</y>
+      <width>54</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>IP:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>100</y>
+      <width>54</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>X:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>170</y>
+      <width>54</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Y:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>113</x>
+      <y>40</y>
+      <width>81</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>T:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>40</y>
+      <width>61</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>P:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
     </property>
    </widget>
   </widget>

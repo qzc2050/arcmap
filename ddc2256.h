@@ -35,6 +35,8 @@
 typedef enum{
     DDC2256_CHIP_1 = 0,
     DDC2256_CHIP_2,
+    DDC2256_CHIP_3,
+    DDC2256_CHIP_4,
 }DDC2256_CHIP_X;
 
 //173 测试通道 IN174
@@ -42,9 +44,9 @@ struct ddc2556_data_type_
 {
     uint16_t adc_vale[256];	//存放电荷量的量化值
     uint32_t collect_sum;		//记录每个芯片是否有数据更新
-    uint8_t integr_cap_index;
+    uint32_t integr_cap_index;
 
-    uint8_t collect_cnt;
+    uint32_t collect_cnt;
 };
 
 _DDC2256_C_EXT_INT_ volatile uint32_t ddc2556_data_upload_timer;
@@ -55,9 +57,9 @@ _DDC2256_C_EXT_INT_ volatile uint8_t ddc2556_conv_state;
 _DDC2256_C_EXT_ uint32_t ddc2556_data_wait_timer;
 
 
-_DDC2256_C_EXT_ struct ddc2556_data_type_ ddc2556_data[7];
+_DDC2256_C_EXT_ struct ddc2556_data_type_ ddc2556_data[9];
 
-
+_DDC2256_C_EXT_ struct ddc2556_data_type_ ddc2556_datacp[9];
 enum ddc2256_scan_task_event_table_
 {
     DDC2256_SCAN_EVENT = 0,

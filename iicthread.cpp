@@ -62,10 +62,15 @@ void iicThread::run()
      if(whybmp280)
      whybmp280->bmp280_init();
 
+
     QThread::msleep(100);
 
     if(whybmp280)
     whybmp280->bmp280_init();
+    QThread::msleep(100);
+    if(whybmp280)
+    whybmp280->bmp280_get_pressure();//先读一次
+
     int icout=0;
     while (1)
     {
@@ -76,15 +81,19 @@ void iicThread::run()
         }
         else if(icout%4==1)
         {
-            if(whybmp280)
+            if(icout>8)
             {
-                float fpress = whybmp280->bmp280_get_pressure()/1000;
-                GpsystemStatus.press = fpress;
+                if(whybmp280)
+                {
+                    float fpress = whybmp280->bmp280_get_pressure()/1000;
+                    GpsystemStatus.press = fpress;
 
-                qDebug()<<whybmp280->bmp280_get_temperature()<<fpress;
-                GpsystemStatus.pressstatus = whybmp280->status;
-                GpsystemStatus.tempbord = whybmp280->bmp280_get_temperature();
+                    // qDebug()<<whybmp280->bmp280_get_temperature()<<fpress;
+                    GpsystemStatus.pressstatus = whybmp280->status;
+                    GpsystemStatus.tempbord = whybmp280->bmp280_get_temperature();
+                }
             }
+
         }
         else if(icout%4==2)
         {
@@ -96,44 +105,49 @@ void iicThread::run()
 
 
 
-        QThread::msleep(100);
+        QThread::msleep(150);
 
         if(myscl300)
         {
 
            float xx=0,yy=0,zz=0;
-           myscl300->SCL3300_Test();
-//           xx =  myscl300->SCL3300_ReadAngle(0);
-//           zz =  myscl300->SCL3300_ReadAngle(1);
-           zz =  myscl300->SCL3300_ReadAngle(0);
-           xx =  myscl300->SCL3300_ReadAngle(1);
-           yy= myscl300->SCL3300_ReadAngle(2)*(-1.0);
-           qDebug()<<xx<<yy<<zz;
+
+           xx =  myscl300->SCL3300_ReadAngle(0)*(-1.0);
+
+           yy =  myscl300->SCL3300_ReadAngle(1);
+
+           zz= myscl300->SCL3300_ReadAngle(2)*(-1.0);
 
 
-           if(zz>0)
+
+
+
+
+
+
+           if(yy>0)
            {
-               if(xx>0)
-               {
-                   xx = zz+90;
-
-               }
-               else
-               {
-                   xx = -(zz+90);
-               }
+                if(xx>0)
+                {
+                    xx = (90-xx)+90;
+                }
+                else
+                {
+                    xx = (xx+90)*(-1.0)-90;
+                }
            }
 
 
 
-           GpsystemStatus.x = xx;
-           GpsystemStatus.y = yy;
-           GpsystemStatus.z = zz;
+           GpsystemStatus.x =xx;
+           GpsystemStatus.y =zz;
+           GpsystemStatus.z =yy;
 
+           // qDebug()<<"angle"<<GpsystemStatus.x<<GpsystemStatus.y<<GpsystemStatus.z;
 
         }
 
 
-        QThread::msleep(300);
+        QThread::msleep(150);
     }
 }

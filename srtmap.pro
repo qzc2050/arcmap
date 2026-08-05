@@ -4,6 +4,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 
+TARGET = arcmap
+
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -21,6 +23,7 @@ SOURCES += \
     bmp280.cpp \
     ddc2256.cpp \
     fbtft.cpp \
+    fsymulticastbeacon.cpp \
     gpio_contorl.cpp \
     iicthread.cpp \
     main.cpp \
@@ -28,7 +31,8 @@ SOURCES += \
     modbusslave.cpp \
     myiic.cpp \
     scl300.cpp \
-    tcpnetserver.cpp
+    tcpnetserver.cpp \
+    ws2812_spi.cpp
 
 HEADERS += \
     ads118.h \
@@ -36,13 +40,16 @@ HEADERS += \
     bmp280.h \
     ddc2256.h \
     fbtft.h \
+    fsymulticastbeacon.h \
     gpio_contorl.h \
     iicthread.h \
     mainwindow.h \
     modbusslave.h \
     myiic.h \
     scl300.h \
-    tcpnetserver.h
+    tcpnetserver.h \
+    version.h \
+    ws2812_spi.h
 
 FORMS += \
     mainwindow.ui

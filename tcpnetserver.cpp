@@ -11,15 +11,67 @@ typedef    uint8_t   INT8U ;
 typedef    uint16_t   INT16U ;
 typedef    uint32_t   INT32U ;
 #include <QSettings>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 network_send_cmd__ network_send_cmd;
 network_send_cmd__ network_send_cmdimage;
 uint8_t Gcorrec_factor[2048]={0};
+
+bool writeWpaSupplicantConf(const char *ssid, const char *password)
+{
+    static const char *kPath = "/etc/wpa_supplicant.conf";
+    static const char *kTmp  = "/etc/wpa_supplicant.conf.tmp";
+
+    if (ssid == NULL || ssid[0] == '\0')
+        return false;
+
+    // 先写临时文件再 rename，避免 "wb" 截断后断电留下空文件
+    FILE *fp = fopen(kTmp, "wb");
+    if (fp == NULL)
+        return false;
+
+    fprintf(fp, "ctrl_interface=/var/run/wpa_supplicant\n"
+                "ctrl_interface_group=0\n"
+                "ap_scan=1\n\n");
+    fprintf(fp, "network={\n\tssid=\"%s\"\n\tpsk=\"%s\"\n\tpriority=2\n}\n",
+            ssid, password ? password : "");
+    if (fflush(fp) != 0) {
+        fclose(fp);
+        unlink(kTmp);
+        return false;
+    }
+    if (fsync(fileno(fp)) != 0) {
+        fclose(fp);
+        unlink(kTmp);
+        return false;
+    }
+    fclose(fp);
+
+    if (rename(kTmp, kPath) != 0) {
+        unlink(kTmp);
+        return false;
+    }
+
+    // 目录项也要落盘，否则 rename 结果也可能丢
+    int dfd = open("/etc", O_RDONLY);
+    if (dfd >= 0) {
+        fsync(dfd);
+        close(dfd);
+    }
+    sync();
+    system("sync");
+    return true;
+}
+
 /******************************************************
  *函数名称:CheckSumSum16
- *输   入:buf 要校验的数据
+ *输  先buf 要校验的数据
  len 校验数据的长
- *输   出:校验和
- *功   能:校验和-16
+ *输  出校验和
+ *功  能校验和16
  *******************************************************/
 uint16_t CheckSum16(uint8_t *buf, uint32_t len)
 {
@@ -30,14 +82,14 @@ uint16_t CheckSum16(uint8_t *buf, uint32_t len)
     for (i = 0; i < len; i++) {
         Sum += *buf++;
     }
-    //32转16
+    //32转6
     CheckSum = (Sum >> 16) + (Sum & 0xffff);
     return CheckSum;
 }
 /*************************************************************
  功能：添加校验和
  形参：data_buf:数据包首指针       len:所要进行校验计算的数据长度
- 返回：
+ 返回，
  详解：产生一个校验和
  编写：HB    2018.06
 **************************************************************/
@@ -57,6 +109,12 @@ uint8_t procotol_get_checksum(uint8_t *data_buf, uint16_t len)
     return checksum;
 }
 
+static void network_append_checksum(network_send_cmd__ *pkt)
+{
+    const uint8_t cs = procotol_get_checksum(pkt->buf, pkt->len);
+    pkt->buf[pkt->len++] = cs;
+}
+
 
 void readCorrectionFactor(int p_type, int p_num) {
 
@@ -69,10 +127,10 @@ void readCorrectionFactor(int p_type, int p_num) {
 
     QString key = "CORRECTION_FACTOR_" + QString::number(p_type) + "_" + QString::number(p_num);
 
-    // 从 QSettings 读取数据（Base64 编码的字符串）
+    // 令QSettings 读取数据（Base64 编码的字符串，
     QByteArray byteArray = settings->value(key).toByteArray();
 
-    // 解码 Base64 字符串并将数据拷贝到 Gcorrec_factor 数组中
+    // 解码 Base64 字符串并将数据拷贝到 Gcorrec_factor 数组上
     QByteArray decodedData = QByteArray::fromBase64(byteArray);
     memcpy(Gcorrec_factor, decodedData.constData(), decodedData.size());
 
@@ -193,7 +251,7 @@ void network_ack_pressure_info_api(INT8U p_result, INT16U pressure)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -214,7 +272,7 @@ void network_ack_pressure_info_api(INT8U p_result, INT16U pressure)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -264,35 +322,62 @@ void network_ack_temperature_info_api(INT8U p_result, INT16U temperature)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
 
-//	if (sys_data.communication_mode == NET_WIFI_MODE)
-//	{
 
-//		if (sys_data.wifi_state == WIFI_INIT_SUCCESS_STATE)	//wifi连接上，初始化成功再发数据
-//		{
-//			m8266_wiif_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
-//		}
-//	}
-//	else
-//	{
-//		//if(S1_State == (S_INIT|S_CONN))
-//		//{
-//		//	S1_Data &= ~S_TRANSMITOK;
-
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
-//		//}
-
-//		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
-//	}
 
 }
 
+/************************************************************
+ * 功能: 上传电离室厚度单位mm *100
+ * 形参:
+ * 返回: 无
+ * 说明: 无
+ *************************************************************/
+void network_ack_dlshd_info_api(INT8U p_result, INT16U dlshd)
+{
+    network_send_cmd.len = 0;
 
+    //包头
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD & 0X00FF;
+
+    //设备类型
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_DEVICE_TYPE;
+
+    //命令代码
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_CODE_GET_DLSHD;
+
+    network_send_cmd.len += 2;//先跳过数据长度的保存
+
+
+    //数据区域
+
+    //结果
+    network_send_cmd.buf[network_send_cmd.len++] = p_result;
+
+    //压力值
+    network_send_cmd.buf[network_send_cmd.len++] = dlshd >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = dlshd;
+
+    //数据长度字段填充
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
+
+    //计算校验和
+    network_append_checksum(&network_send_cmd);
+
+    ////包尾
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
+
+
+
+}
 
 
 
@@ -342,7 +427,7 @@ void network_ack_set_integral_time_api(INT16U p_result)
     //{
     //	S1_Data &= ~S_TRANSMITOK;
 
-    //	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+    //	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
     //}
 
     network_send_cmd.len = 0;
@@ -370,7 +455,7 @@ void network_ack_set_integral_time_api(INT16U p_result)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -389,7 +474,7 @@ void network_ack_set_integral_time_api(INT16U p_result)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -444,7 +529,7 @@ void network_ack_set_integral_cap_api(INT8U p_result)
     //{
     //	S1_Data &= ~S_TRANSMITOK;
 
-    //	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+    //	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
     //}
 
     network_send_cmd.len = 0;
@@ -472,7 +557,7 @@ void network_ack_set_integral_cap_api(INT8U p_result)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -491,7 +576,7 @@ void network_ack_set_integral_cap_api(INT8U p_result)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -533,7 +618,7 @@ void network_ack_set_add_cnt_api(INT8U p_result)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -552,7 +637,7 @@ void network_ack_set_add_cnt_api(INT8U p_result)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -593,7 +678,7 @@ void network_ack_write_sn_api(INT8U p_result)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -612,7 +697,7 @@ void network_ack_write_sn_api(INT8U p_result)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -649,7 +734,7 @@ void network_ack_read_sn_api(INT8U p_result, INT8U *r_sn)
     //结果
     network_send_cmd.buf[network_send_cmd.len++] = p_result;
 
-    //序列号
+    //序列发
     memcpy(&network_send_cmd.buf[network_send_cmd.len], GproductInfo.productsernum, 10);
     network_send_cmd.len += 10;
 
@@ -659,7 +744,7 @@ void network_ack_read_sn_api(INT8U p_result, INT8U *r_sn)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -678,7 +763,7 @@ void network_ack_read_sn_api(INT8U p_result, INT8U *r_sn)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -722,7 +807,7 @@ void network_ack_write_correction_factor_api(INT8U p_result, INT8U p_type, INT8U
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -741,7 +826,7 @@ void network_ack_write_correction_factor_api(INT8U p_result, INT8U p_type, INT8U
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -793,7 +878,7 @@ void network_ack_read_correction_factor_api(INT8U p_result, INT8U p_type, INT8U 
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -812,7 +897,7 @@ void network_ack_read_correction_factor_api(INT8U p_result, INT8U p_type, INT8U 
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -855,7 +940,7 @@ void network_ack_set_ip_api(INT8U p_result)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -874,7 +959,7 @@ void network_ack_set_ip_api(INT8U p_result)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -886,12 +971,11 @@ void network_ack_set_ip_api(INT8U p_result)
 
 
 /************************************************************
- * 功能: 获取版本号返回
- * 形参:
+ * 功能: 获取固件版本号返回
+ * 形参: p_result 结果, p_fwver 固件版本字符串（最头0字节，与 softver 一致）
  * 返回: 无
- * 说明: 无
  *************************************************************/
-void network_ack_get_fw_ver(INT8U p_result, INT8U p_ver)
+void network_ack_get_fw_ver(INT8U p_result, const char *p_fwver)
 {
     INT16U i;
 
@@ -909,48 +993,83 @@ void network_ack_get_fw_ver(INT8U p_result, INT8U p_ver)
 
     network_send_cmd.len += 2;//先跳过数据长度的保存
 
-    //数据区域
-    //结果
+    //数据区域：结果+ softver（固定0字节，不足补0，
     network_send_cmd.buf[network_send_cmd.len++] = p_result;
 
-    network_send_cmd.buf[network_send_cmd.len++] = p_ver;
-
+    for (i = 0; i < 20; i++)
+    {
+        network_send_cmd.buf[network_send_cmd.len++] = p_fwver ? (INT8U)p_fwver[i] : 0;
+    }
 
     //数据长度字段填充
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
+}
 
-//	if (sys_data.communication_mode == NET_WIFI_MODE)
-//	{
-//		if (sys_data.wifi_state == WIFI_INIT_SUCCESS_STATE)	//wifi连接上，初始化成功再发数据
-//		{
-//			m8266_wiif_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
-//		}
-//	}
-//	else
-//	{
-//		//if(S1_State == (S_INIT|S_CONN))
-//		//{
-//		//	S1_Data &= ~S_TRANSMITOK;
+void network_ack_get_hw_ver_api(INT8U p_result, const char *p_hwver)
+{
+    INT16U i;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
-//		//}
+    network_send_cmd.len = 0;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD & 0X00FF;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_DEVICE_TYPE;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_CODE_GET_HW_VER;
+    network_send_cmd.len += 2;
+    network_send_cmd.buf[network_send_cmd.len++] = p_result;
+    for (i = 0; i < 20; i++)
+        network_send_cmd.buf[network_send_cmd.len++] = p_hwver ? (INT8U)p_hwver[i] : 0;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
+    network_append_checksum(&network_send_cmd);
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
+}
 
-//		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
-//	}
+void network_ack_set_hw_ver_api(INT8U p_result)
+{
+    network_send_cmd.len = 0;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD & 0X00FF;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_DEVICE_TYPE;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_CODE_SET_HW_VER;
+    network_send_cmd.len += 2;
+    network_send_cmd.buf[network_send_cmd.len++] = p_result;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
+    network_append_checksum(&network_send_cmd);
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
+}
+
+void network_ack_get_net_services_api(INT8U p_result, INT8U enable)
+{
+    network_send_cmd.len = 0;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_HEAD & 0X00FF;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_DEVICE_TYPE;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_CODE_GET_NET_SERVICES;
+    network_send_cmd.len += 2;
+    network_send_cmd.buf[network_send_cmd.len++] = p_result;
+    network_send_cmd.buf[network_send_cmd.len++] = enable;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
+    network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
+    network_append_checksum(&network_send_cmd);
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
+    network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
 }
 
 
 
 /************************************************************
- * 功能: 设置当前位置角度为0返回
+ * 功能: 设置当前位置角度上返回
  * 形参:
  * 返回: 无
  * 说明: 无
@@ -983,7 +1102,7 @@ void network_ack_set_angle_0(INT8U p_result)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -1002,7 +1121,7 @@ void network_ack_set_angle_0(INT8U p_result)
 //		//{
 //		//	S1_Data &= ~S_TRANSMITOK;
 
-//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理,端口0发送30字节数据
+//		//	Write_SOCK_Data_Buffer(1, network_send_cmd.buf, network_send_cmd.len);//指定Socket(0~7)发送数据处理端口0发送0字节数据
 //		//}
 
 //		w5500_socket_send_data(SETTING_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
@@ -1010,7 +1129,7 @@ void network_ack_set_angle_0(INT8U p_result)
 }
 //network_ack_set_wifiname_api(NET_CMD_SET_SUCCESS);
 
-//返回 参数1：INT8U p_result，参数2：命令代码INT8U cmd_code
+//返回 参数1：INT8U p_result，参数：命令代码INT8U cmd_code
 //网络命令返回
 void network_ack_cmd_api(INT8U p_result, INT8U cmd_code)
 {
@@ -1039,7 +1158,7 @@ void network_ack_cmd_api(INT8U p_result, INT8U cmd_code)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
 
     ////包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
@@ -1074,7 +1193,7 @@ void network_ack_get_wifiname_api(INT8U p_result, INT8U *p_wifiname)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
     //包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
@@ -1104,7 +1223,7 @@ void network_ack_get_wifipassword_api(INT8U p_result, INT8U *p_wifipass)
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_1] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) >> 8;
     network_send_cmd.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmd.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
     //计算校验和
-    network_send_cmd.buf[network_send_cmd.len++] = procotol_get_checksum(network_send_cmd.buf, network_send_cmd.len);
+    network_append_checksum(&network_send_cmd);
     //包尾
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END >> 8;
     network_send_cmd.buf[network_send_cmd.len++] = NET_CMD_ACK_END & 0X00FF;
@@ -1222,6 +1341,13 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
             }
             break;
 
+        case NET_CMD_CODE_GET_DLSHD : //上传电离室厚度
+            {
+
+                network_ack_dlshd_info_api(NET_CMD_SET_SUCCESS,INT16U(GSeting.beiyong));
+            }
+            break;
+
         case NET_CMD_CODE_UPLOAD_PRESSURE:	//上传气压
             {
                 //network_ack_pressure_info_api(NET_CMD_SET_SUCCESS, sys_data.cur_pressure);
@@ -1255,13 +1381,13 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
                 INT8U p_type=0;
                 INT8U p_num=0;
 
-                p_type = p_data[NET_CMD_DATA_INDEX];	//获取是默认、用户
-                p_num = p_data[NET_CMD_DATA_INDEX + 1];	//获取是那一片
+                p_type = p_data[NET_CMD_DATA_INDEX];	//获取是默认、用成
+                p_num = p_data[NET_CMD_DATA_INDEX + 1];	//获取是那一版
 
                 DBG_PRINTF("p_type:%d \r\n", p_type);
                 DBG_PRINTF("p_num:%d \r\n", p_num);
 
-                if ((p_type >= 0 && p_type <= 1) && (p_num >= 0 && p_num <= 6))//条件符合才写入
+                if ((p_type >= 0 && p_type <= 1) && (p_num >= 0 && p_num <= 7))//条件符合才写先
                 {
                     // 将数组转换为QByteArray
                     //QByteArray byteArray(reinterpret_cast<const char*>(&p_data[NET_CMD_DATA_INDEX + 2]), 254*4);
@@ -1290,14 +1416,14 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
                 INT8U p_type;
                 INT8U p_num;
 
-                p_type = p_data[NET_CMD_DATA_INDEX];	//获取是默认、用户
-                p_num = p_data[NET_CMD_DATA_INDEX + 1];	//获取是那一片
+                p_type = p_data[NET_CMD_DATA_INDEX];	//获取是默认、用成
+                p_num = p_data[NET_CMD_DATA_INDEX + 1];	//获取是那一版
 
                 DBG_PRINTF("p_type:%d \r\n", p_type);
                 DBG_PRINTF("p_num:%d \r\n", p_num);
 
 
-                if ((p_type >= 0 && p_type <= 1) && (p_num >= 0 && p_num <= 6))//条件符合才写入
+                if ((p_type >= 0 && p_type <= 1) && (p_num >= 0 && p_num <= 7))//条件符合才写先
                 {
 
                     readCorrectionFactor(p_type,p_num);
@@ -1319,7 +1445,7 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
                 tempip[2]= p_data[NET_CMD_DATA_INDEX + 2];
                 tempip[3]= p_data[NET_CMD_DATA_INDEX + 3];
                 
-                //把tempip转换成“192.16.2.1”的QString
+                //把tempip转换成“92.16.2.1”的QString
                 QString ipstr = QString("%1.%2.%3.%4").arg(tempip[0]).arg(tempip[1]).arg(tempip[2]).arg(tempip[3]);
 
             
@@ -1358,27 +1484,20 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
                     //network_ack_cmd_api(INT8U p_result, INT8U cmd_code)
                     network_ack_cmd_api(NET_CMD_SET_SUCCESS, NET_CMD_CODE_SET_IP);
 
-                
-                    //更新设备ip地址
-                    char cmdbuf[1024];
-                    memset ( cmdbuf, 0,1024 );
-                    QString ips = QString(GconfigNet.ip);
-                    sprintf ( cmdbuf, "ifconfig eth0 %s netmask 255.255.254.0",ipstr.toLatin1().data());
-                    system ( cmdbuf );
+                    applyEth0IpDelayed(ipstr);
                 }
             }   
             break;
 
         case NET_CMD_CODE_GET_FW_VER:	//获取固件版本号
             {
-                network_ack_get_fw_ver(NET_CMD_SET_SUCCESS, 1);
-
+                network_ack_get_fw_ver(NET_CMD_SET_SUCCESS, GproductInfo.softver);
             }
             break;
 
         case NET_CMD_CODE_SET_ANGLE_0:	//设置角度为0
             {
-                //设置当前位置角度为0，读取当前角度，然后将校准值与当前值取反
+                //设置当前位置角度上，读取当前角度，然后将校准值与当前值取发
                 GpsystemStatus.cx =-GpsystemStatus.x;
                 GpsystemStatus.cy =-GpsystemStatus.y;
                 GpsystemStatus.cz =-GpsystemStatus.z;
@@ -1397,121 +1516,143 @@ INT8U process_socket1_cmd(INT8U *p_data, INT32U len)
             break;
         case NET_CMD_CODE_SET_WIFINAME:	//设置wifi名称
             {
-            // #define NET_CMD_DATA_LEN_INDEX_1 (4)//数据长度
-            // #define NET_CMD_DATA_LEN_INDEX_2 (5)//数据长度
-
-            INT8U p_len = p_data[NET_CMD_DATA_LEN_INDEX_1];	//获取数据长度
-            QString wifiname = QString(QByteArray::fromRawData((const char*)&p_data[NET_CMD_DATA_INDEX], p_len));
-                            //ssid没法判断有没有效，所以不用判断直接保存
-            memset(GconfigNet.ssid,0,32);
-            for(int i=0;i<wifiname.length();i++)
+            INT16U p_len = ((INT16U)p_data[NET_CMD_DATA_LEN_INDEX_1] << 8)
+                           | p_data[NET_CMD_DATA_LEN_INDEX_2];
+            if (p_len == 0 || p_len > 31)
             {
-                //把wifiname赋值给GconfigNet.ssid
-                GconfigNet.ssid[i]=wifiname.at(i).toLatin1();
+                network_ack_cmd_api(NET_CMD_SET_FAIL, NET_CMD_CODE_SET_WIFINAME);
+                break;
             }
-            //更新设备的wifi名字 wifigroup 是wlan，key是wifiname
+            memset(GconfigNet.ssid, 0, sizeof(GconfigNet.ssid));
+            memcpy(GconfigNet.ssid, &p_data[NET_CMD_DATA_INDEX], p_len);
+            // 与启动加载、Modbus 对齐：写 ssid，并同步旧键 wifiname
             QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+            settings->beginGroup("wlan0");
+            settings->setValue("ssid", QString::fromLatin1(GconfigNet.ssid));
+            settings->setValue("wifiname", QString::fromLatin1(GconfigNet.ssid));
+            settings->endGroup();
             settings->beginGroup("wlan");
-            settings->setValue("wifiname",QString(GconfigNet.ssid));
+            settings->setValue("wifiname", QString::fromLatin1(GconfigNet.ssid));
             settings->endGroup();
             settings->sync();
             delete  settings;
-            //写/etc/wpa_supplicant.conf
-            FILE* fp = fopen ( "/etc/wpa_supplicant.conf", "wb" );
-            if(fp == NULL)
+            if (!writeWpaSupplicantConf(GconfigNet.ssid, GconfigNet.password))
             {
-                //pline() << "None Encryption";
-
-                //return false;
+                network_ack_cmd_api(NET_CMD_SET_FAIL, NET_CMD_CODE_SET_WIFINAME);
+                break;
             }
-            fprintf ( fp, "ctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nap_scan=1\n\n" );
-
-            fprintf ( fp, "network={\n\tssid=\"%s\"\n\tpsk=\"%s\"\n\tpriority=2\n}\n", GconfigNet.ssid,GconfigNet.password);
-
-
-            fclose(fp);
-            //返回正确响应
             network_ack_cmd_api(NET_CMD_SET_SUCCESS, NET_CMD_CODE_SET_WIFINAME);
-
-           
             }
             break;
 
         case NET_CMD_CODE_SET_WIFIPASS:	//设置wifi密码
             {
-                // #define NET_CMD_DATA_LEN_INDEX_1 (4)//数据长度
-                // #define NET_CMD_DATA_LEN_INDEX_2 (5)//数据长度   
-                INT8U p_len = p_data[NET_CMD_DATA_LEN_INDEX_1];	//获取数据长度
-                QString wifipassword = QString(QByteArray::fromRawData((const char*)&p_data[NET_CMD_DATA_INDEX], p_len));
-                //wifi密码没法判断有没有效，所以不用判断直接保存
-                memset(GconfigNet.password,0,32);
-                for(int i=0;i<wifipassword.length();i++)
+                INT16U p_len = ((INT16U)p_data[NET_CMD_DATA_LEN_INDEX_1] << 8)
+                               | p_data[NET_CMD_DATA_LEN_INDEX_2];
+                if (p_len == 0 || p_len > 31)
                 {
-                    //把wifipassword赋值给GconfigNet.password
-                    GconfigNet.password[i]=wifipassword.at(i).toLatin1();
+                    network_ack_cmd_api(NET_CMD_SET_FAIL, NET_CMD_CODE_SET_WIFIPASS);
+                    break;
                 }
-                //更新设备的wifi密码 wifigroup 是wlan，key是wifipassword
-
+                memset(GconfigNet.password, 0, sizeof(GconfigNet.password));
+                memcpy(GconfigNet.password, &p_data[NET_CMD_DATA_INDEX], p_len);
+                // 与启动加载、Modbus 对齐：写 password，并同步旧键 wifipassword
                 QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
+                settings->beginGroup("wlan0");
+                settings->setValue("password", QString::fromLatin1(GconfigNet.password));
+                settings->setValue("wifipassword", QString::fromLatin1(GconfigNet.password));
+                settings->endGroup();
                 settings->beginGroup("wlan");
-                settings->setValue("wifipassword",QString(GconfigNet.password));
-                settings->endGroup();    
+                settings->setValue("wifipassword", QString::fromLatin1(GconfigNet.password));
+                settings->endGroup();
                 settings->sync();
                 delete  settings;
-                //写/etc/wpa_supplicant.conf
-                FILE* fp = fopen ( "/etc/wpa_supplicant.conf", "wb" );
-                if(fp == NULL)
+                // ssid 为空时不覆盖 conf，避免再次写成空网络块
+                if (GconfigNet.ssid[0] == '\0'
+                    || !writeWpaSupplicantConf(GconfigNet.ssid, GconfigNet.password))
                 {
-                    //pline() << "None Encryption";
-
-                    //return false;
+                    network_ack_cmd_api(NET_CMD_SET_FAIL, NET_CMD_CODE_SET_WIFIPASS);
+                    break;
                 }
-                fprintf ( fp, "ctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nap_scan=1\n\n" );
-
-                fprintf ( fp, "network={\n\tssid=\"%s\"\n\tpsk=\"%s\"\n\tpriority=2\n}\n", GconfigNet.ssid,GconfigNet.password);
-
-
-                fclose(fp);
-                //返回正确响应
                 network_ack_cmd_api(NET_CMD_SET_SUCCESS, NET_CMD_CODE_SET_WIFIPASS);
             }
             break;
             
         case NET_CMD_CODE_GET_WIFINAME:	//读取wifi名称
             {
-                //读取设备的wifi名字 wifigroup 是wlan，key是wifiname
-                QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
-                settings->beginGroup("wlan");
-                QString wifiname = settings->value("wifiname").toString();
-                settings->endGroup();    
-                delete  settings;
-                //返回正确响应
-               
-                QByteArray wifiNameUtf8 = wifiname.toUtf8();
-                 // 现在将 char * 转换为 unsigned char *
-                 unsigned char *wifiNameUChar = (unsigned char *)wifiNameUtf8.data();
-                 network_ack_get_wifiname_api(NET_CMD_SET_SUCCESS,wifiNameUChar);
-
+                // 直接回GconfigNet（与 Modbus 读保持寄存器一致）
+                network_ack_get_wifiname_api(NET_CMD_SET_SUCCESS,
+                                            reinterpret_cast<INT8U *>(GconfigNet.ssid));
             }
             break;
             
         case NET_CMD_CODE_GET_WIFIPASS:	//读取wifi密码
             {
-                //读取设备的wifi密码 wifigroup 是wlan，key是wifipassword            
-                QSettings *settings = new QSettings("set.ini",QSettings::IniFormat);
-                settings->beginGroup("wlan");
-                QString wifipassword = settings->value("wifipassword").toString();              
-                settings->endGroup();    
-                delete  settings;
-                //返回正确响应,INT8U *p_wifipass
-            
-                QByteArray wifiPasswordUtf8 = wifipassword.toUtf8();
+                network_ack_get_wifipassword_api(NET_CMD_SET_SUCCESS,
+                                                reinterpret_cast<INT8U *>(GconfigNet.password));
+            }
+            break;
 
-                // 现在将 char * 转换为 unsigned char *
-                unsigned char *wifiPasswordUChar = reinterpret_cast<unsigned char *>(wifiPasswordUtf8.data());
+        case NET_CMD_CODE_SET_NET_SERVICES:	//设置网络管理服务 telnet/ftp/http/ssh
+            {
+                INT8U enable = p_data[NET_CMD_DATA_INDEX];
 
+                QSettings settings("set.ini", QSettings::IniFormat);
+                settings.beginGroup("netservices");
+                if (enable != 0)
+                {
+                    settings.setValue("enable", 1);
+                    settings.endGroup();
+                    settings.sync();
+                    GpsystemStatus.netservices = 1;
+                    applyNetServicesChmod(true);
+                }
+                else
+                {
+                    settings.setValue("enable", 0);
+                    settings.endGroup();
+                    settings.sync();
+                    GpsystemStatus.netservices = 0;
+                    applyNetServicesChmod(false);
+                }
+                network_ack_cmd_api(NET_CMD_SET_SUCCESS, NET_CMD_CODE_SET_NET_SERVICES);
+            }
+            break;
 
-                network_ack_get_wifipassword_api(NET_CMD_SET_SUCCESS,wifiPasswordUChar);
+        case NET_CMD_CODE_GET_NET_SERVICES:	//读取网络管理服务开关
+            {
+                QSettings settings("set.ini", QSettings::IniFormat);
+                settings.beginGroup("netservices");
+                INT8U enable = settings.value("enable", 1).toInt() ? 1 : 0;
+                settings.endGroup();
+                network_ack_get_net_services_api(NET_CMD_SET_SUCCESS, enable);
+            }
+            break;
+
+        case NET_CMD_CODE_GET_HW_VER:	//获取硬件版本号
+            {
+                network_ack_get_hw_ver_api(NET_CMD_SET_SUCCESS, GproductInfo.hardver);
+            }
+            break;
+
+        case NET_CMD_CODE_SET_HW_VER:	//设置硬件版本号
+            {
+                INT16U data_len = ((INT16U)p_data[NET_CMD_DATA_LEN_INDEX_1] << 8)
+                                  | p_data[NET_CMD_DATA_LEN_INDEX_2];
+                if (data_len > 20)
+                    data_len = 20;
+
+                memset(GproductInfo.hardver, 0, sizeof(GproductInfo.hardver));
+                memcpy(GproductInfo.hardver, &p_data[NET_CMD_DATA_INDEX], data_len);
+                GproductInfo.hardver[sizeof(GproductInfo.hardver) - 1] = '\0';
+
+                QSettings settings("set.ini", QSettings::IniFormat);
+                settings.beginGroup("GproductInfo");
+                settings.setValue("hardwareversion", QString::fromUtf8(GproductInfo.hardver));
+                settings.endGroup();
+                settings.sync();
+
+                network_ack_set_hw_ver_api(NET_CMD_SET_SUCCESS);
             }
             break;
 
@@ -1537,7 +1678,7 @@ void network_send_image_api_2dmap(void)
 {
     //#define DATA_LEN (1792)
     //INT16U data_len = 1792;
-    uint16_t data_len = 1280;
+    uint16_t data_len = 2048;
     uint16_t i, j, count = 0;
     uint16_t checkbit;
     static uint32_t num = 0;
@@ -1559,12 +1700,12 @@ void network_send_image_api_2dmap(void)
     network_send_cmdimage.buf[network_send_cmdimage.len++] = data_len >> 8;
     network_send_cmdimage.buf[network_send_cmdimage.len++] = data_len & 0X00FF;
 
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 8; i++)
     {
         for (j = 0; j < 256; j++)
         {
-            network_send_cmdimage.buf[network_send_cmdimage.len++] = ddc2556_data[i].adc_vale[j] >> 8;
-            network_send_cmdimage.buf[network_send_cmdimage.len++] = ddc2556_data[i].adc_vale[j] & 0X00FF;
+            network_send_cmdimage.buf[network_send_cmdimage.len++] = ddc2556_datacp[i].adc_vale[j] >> 8;
+            network_send_cmdimage.buf[network_send_cmdimage.len++] = ddc2556_datacp[i].adc_vale[j] & 0X00FF;
             count++;
         }
 
@@ -1580,14 +1721,14 @@ void network_send_image_api_2dmap(void)
     //w5500_socket_send_data(DATA_UPLOAD_SOCKET_NUM, network_send_cmd.buf, network_send_cmd.len);
 }
 /************************************************************
- * 功能: 上传图像数据(用旧协议的格式)
+ * 功能: 上传图像数据(用旧协议的格开
  * 形参:
  * 返回: 无
  * 说明: 无
  *************************************************************/
 void network_send_image_api_old_protocol(void)
 {
-    #define DATA_LEN (1792)
+    #define DATA_LEN (2048)
     //INT16U data_len = 1792;
     uint16_t i, j, count = 0;
     uint16_t checkbit;
@@ -1611,13 +1752,13 @@ void network_send_image_api_old_protocol(void)
 
     //DBG_PRINTF("collect cnt :");
     //数据
-    for (i = 0; i < 7; i++)
+    for (i = 0; i < 8; i++)
     {
         for (j = 0; j < 256; j++)
         {
             //ddc2556_data[i].adc_vale[j] = pdata;
-            network_send_cmdimage.buf[10 + count * 2] = ddc2556_data[i].adc_vale[j] >> 8;//ddc2556_adc_vale[i][j] >> 8;
-            network_send_cmdimage.buf[10 + count * 2 + 1] = ddc2556_data[i].adc_vale[j];//ddc2556_adc_vale[i][j] & 0X00FF;
+            network_send_cmdimage.buf[10 + count * 2] = ddc2556_datacp[i].adc_vale[j] >> 8;//ddc2556_adc_vale[i][j] >> 8;
+            network_send_cmdimage.buf[10 + count * 2 + 1] = ddc2556_datacp[i].adc_vale[j];//ddc2556_adc_vale[i][j] & 0X00FF;
             count++;
         }
 
@@ -1630,7 +1771,7 @@ void network_send_image_api_old_protocol(void)
         //	DBG_PRINTF("%02uxx ", ddc2556_data[i].collect_cnt);
         //}
 
-        ddc2556_data[i].collect_cnt = 0;
+        ddc2556_datacp[i].collect_cnt = 0;
     }
 
     //DBG_PRINTF("\r\n");
@@ -1654,7 +1795,7 @@ void network_send_image_api_old_protocol(void)
  * 功能: 上传图像数据
  * 形参:
  * 返回: 无
- * 说明: 无 arcmap
+ * 说明: 无arcmap
  *************************************************************/
 void network_send_image_api(void)
 {
@@ -1689,7 +1830,7 @@ void network_send_image_api(void)
 
     //DBG_PRINTF("collect cnt :");
     //数据
-    for (i = 0; i < 7; i++)
+    for (i = 0; i < 8; i++)
     {
         for (j = 0; j < 256; j++)
         {
@@ -1707,7 +1848,7 @@ void network_send_image_api(void)
         //	DBG_PRINTF("%02uxx ", ddc2556_data[i].collect_cnt);
         //}
 
-        ddc2556_data[i].collect_cnt = 0;
+        ddc2556_datacp[i].collect_cnt = 0;
     }
 
     //数据长度字段填充
@@ -1715,7 +1856,7 @@ void network_send_image_api(void)
     network_send_cmdimage.buf[NET_CMD_DATA_LEN_INDEX_2] = (network_send_cmdimage.len - NET_CMD_FIXED_HEAD_LEN) & 0X00FF;
 
     //计算校验和
-    network_send_cmdimage.buf[network_send_cmdimage.len++] = procotol_get_checksum(network_send_cmdimage.buf, network_send_cmdimage.len);
+    network_append_checksum(&network_send_cmdimage);
 
     ////包尾
     network_send_cmdimage.buf[network_send_cmdimage.len++] = NET_CMD_END >> 8;
@@ -1735,7 +1876,7 @@ void network_send_image_api(void)
 
 
 }
-int mode=0;
+
 TcpNetServer::TcpNetServer(QObject *parent) : QObject(parent) {
     server = new  QTcpServer(this);
     //server2 = new QTcpServer(this);
@@ -1768,8 +1909,9 @@ void TcpNetServer::sendDataToClientsLocally()
     {
         if(currentconnect != nullptr && currentconnect->state() == QAbstractSocket::ConnectedState)
         {
+            Giswork = 1;
             //return;
-            if(mode==0)
+            if(Goldmode==0)
             {
                 //qDebug
                 network_send_image_api();
@@ -1785,6 +1927,14 @@ void TcpNetServer::sendDataToClientsLocally()
             currentconnect->write(data,network_send_cmdimage.len);
             qDebug()<<iport<<"trn";
         }
+        else
+        {
+             Giswork = 0;
+        }
+    }
+    else
+    {
+        Giswork = 0;
     }
 
 }
@@ -1796,19 +1946,28 @@ void TcpNetServer::onNewConnection()
 
     if(currentconnect != nullptr) // 如果有原有连接，要先断开并释放资源
     {
+        disconnect(currentconnect, nullptr, this, nullptr);
         currentconnect->disconnectFromHost();
         currentconnect->deleteLater();
+    currentconnect = nullptr;
+        emit hostClientDisconnected();
     }
     // 新的连接成为当前的socket
     currentconnect = server->nextPendingConnection();
     connect(currentconnect, &QTcpSocket::readyRead, this, &TcpNetServer::onReadyRead);
-
-
+    connect(currentconnect, &QTcpSocket::disconnected, this, &TcpNetServer::onClientDisconnected);
+    emit hostClientConnected();
 }
 
 void TcpNetServer::onClientDisconnected()
 {
-
+    QTcpSocket *sock = qobject_cast<QTcpSocket *>(sender());
+    if (sock && sock == currentconnect)
+    currentconnect = nullptr;
+    if (sock)
+        sock->deleteLater();
+    Giswork = 0;
+    emit hostClientDisconnected();
 }
 
 void TcpNetServer::  sendback(sysrecvPkg *cmd)
@@ -1860,7 +2019,7 @@ void TcpNetServer::onReadyRead()
             network_send_cmd.len=0;
             if(datarecv.contains("bgtest"))
             {
-                 mode=1;
+                 Goldmode=1;
                  datarecv.append("ok");
 //                if(datarecv.contains("e"))
 //                {

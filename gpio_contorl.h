@@ -23,15 +23,26 @@ public:
     GPIO_CONTORL();
     void run() override;
     QTimer *testmode;
+
+     QTimer *ledmodetime;
     int icout;
+    int icouthv;
     int  checkpower();
     int  checkbat();
+    int  checkhv();
+    int  icountpwm;
+    bool increasing = true;  //
     int  HVCHAGE(unsigned value);
+    int gammaTable[256]; // 伽马校正表
+    int fdback;
+    unsigned long args[3]={0};
 signals:
     void startkeypressed();
     void endkeypressed();
 private slots:
     void dotimeout();
+    void doledtimeout();
+
 };
 
 #endif // GPIO_CONTORL_H

@@ -84,6 +84,8 @@ public:
     void SCL3300_Init(void);
     void SCL3300_Test(void);
     float SCL3300_ReadAngle(uint8_t direction);
+    float getTiltAngle() ;
+    float getRotationAngle();
     int devfd;
     int status;
     void  scl300_read_reg_multi_byte(uint8_t *buf, uint16_t len);

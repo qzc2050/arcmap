@@ -19,23 +19,107 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
-#endif
-void scl300::delayMs(int msec)
+
+#define GPIO_300CS  46
+#define GPIO_DIR_IN	0
+#define GPIO_DIR_OUT	1
+static int gpio_export(unsigned gpio)
 {
-    QTime dieTime = QTime::currentTime().addMSecs(msec);
-    while( QTime::currentTime() < dieTime )
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    int fd, len;
+    char buf[11];
+
+    fd = open("/sys/class/gpio/export", O_WRONLY);
+    if (fd < 0) {
+        perror("gpio/export");
+        return fd;
+    }
+
+    len = snprintf(buf, sizeof(buf), "%d", gpio);
+    write(fd, buf, len);
+    close(fd);
+
+    return 0;
 }
 
+static int gpio_unexport(unsigned gpio)
+{
+    int fd, len;
+    char buf[11];
 
-int scl300::CS(unsigned value)
+    fd = open("/sys/class/gpio/unexport", O_WRONLY);
+    if (fd < 0) {
+        perror("gpio/export");
+        return fd;
+    }
+
+    len = snprintf(buf, sizeof(buf), "%d", gpio);
+    write(fd, buf, len);
+    close(fd);
+    return 0;
+}
+
+static int gpio_dir(unsigned gpio, unsigned dir)
 {
     int fd, len;
     char buf[60];
 
-    #ifdef Q_OS_LINUX
+    len = snprintf(buf, sizeof(buf), "/sys/class/gpio/gpio%d/direction", gpio);
 
-    fd = open("/sys/class/gpio_sw/PB12/data", O_WRONLY);
+    fd = open(buf, O_WRONLY);
+    if (fd < 0) {
+        perror("gpio/direction");
+        return fd;
+    }
+
+    if (dir == GPIO_DIR_OUT)
+        write(fd, "out", 4);
+    else
+        write(fd, "in", 3);
+
+    close(fd);
+    return 0;
+}
+
+static int gpio_edge(unsigned gpio, unsigned edge)
+{
+    int fd, len;
+    char buf[60];
+
+    len = snprintf(buf, sizeof(buf), "/sys/class/gpio/gpio%d/edge", gpio);
+
+    fd = open(buf, O_WRONLY);
+    if (fd < 0) {
+        perror("gpio/edge");
+        return fd;
+    }
+
+    if (edge == 1)
+       write(fd, "rising", 6);
+    else
+        write(fd, "falling", 7);
+
+    close(fd);
+    return 0;
+}
+
+static int gpio_dir_out(unsigned gpio)
+{
+    return gpio_dir(gpio, GPIO_DIR_OUT);
+}
+
+static int gpio_dir_in(unsigned gpio)
+{
+    return gpio_dir(gpio, GPIO_DIR_IN);
+}
+
+static int gpio_value(unsigned gpio, unsigned value)
+{
+    int fd, len;
+    char buf[60];
+
+    len = snprintf(buf, sizeof(buf), "/sys/class/gpio/gpio%d/value", gpio);
+
+    fd = open(buf, O_WRONLY);
     if (fd < 0) {
         perror("gpio/value");
         return fd;
@@ -47,6 +131,55 @@ int scl300::CS(unsigned value)
         write(fd, "0", 2);
 
     close(fd);
+    return 0;
+}
+
+static int readGPIOValue(int gpioNumber) {
+    char gpioPath[64];
+    sprintf(gpioPath, "/sys/class/gpio/gpio%d/value", gpioNumber);
+
+    int fd = open(gpioPath, O_RDONLY);
+    if (fd == -1) {
+        perror("Failed to open GPIO value file");
+        exit(EXIT_FAILURE);
+    }
+
+    char valueStr[2];
+    if (read(fd, valueStr, sizeof(valueStr)) == -1) {
+        perror("Failed to read GPIO value");
+        exit(EXIT_FAILURE);
+    }
+
+    int value = atoi(valueStr);
+
+    close(fd);
+
+    return value;
+}
+
+#endif
+void scl300::delayMs(int msec)
+{
+    QTime dieTime = QTime::currentTime().addMSecs(msec);
+    while( QTime::currentTime() < dieTime )
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
+
+int scl300::CS(unsigned value)
+{
+
+
+    #ifdef Q_OS_LINUX
+
+
+
+    if (value)
+       gpio_value(GPIO_300CS,1);
+    else
+       gpio_value(GPIO_300CS,0);
+
+
     #endif
     return 0;
 }
@@ -163,12 +296,15 @@ scl300::scl300(QObject *parent) : QObject(parent)
     }
     printf("the mode22222 is %02x\n",mode);
 
+    gpio_export(GPIO_300CS);
+    gpio_dir_out(GPIO_300CS);
     CS(1);
     //SPI1_read_write_byte(0Xff);
 
 
     #endif
     SCL3300_Init();
+    SCL3300_Test();
 
 }
 
@@ -240,7 +376,7 @@ void scl300::SCL3300_Test(void)
 }
 /**
  @brief 读取角度
- @param direction -[in] 要读取的方向X，Y，Z轴
+ @param direction -[in] 要读取的X，Y，Z轴0,1,2
  @return 角度数
 */
 float scl300::SCL3300_ReadAngle(uint8_t direction)
@@ -249,7 +385,7 @@ float scl300::SCL3300_ReadAngle(uint8_t direction)
 
     if(direction == ANG_X)
     {
-        //这个是x
+
         writeRegister(READ_ANG_X);
     }
     else if(direction == ANG_Y)
@@ -258,23 +394,50 @@ float scl300::SCL3300_ReadAngle(uint8_t direction)
     }
     else if(direction == ANG_Z)
     {
-        //这个是y
+
         writeRegister(READ_ANG_Z);
     }
     readRegister(s_readData,4);
+
+    int16_t angle = (int16_t)((s_readData[1] << 8) | s_readData[2]);
                                                             // SPI返回结构第1字节OP+RS，
-    uint16_t angle = (s_readData[1] << 8) + s_readData[2];  // 第2和第3字节为Data
+    //uint16_t angle = (s_readData[1] << 8) + s_readData[2];  // 第2和第3字节为Data
                                                             // 第4字节为CRC
     float fangle = (float)angle / 16384.0 * 90.0;           // 如3976/2^14*90=21.84°
 
-    qDebug()<<direction<<fangle;
-    if(fangle>180)
-    {
-        fangle-=360;
-    }
+    // qDebug()<<direction<<fangle;
+
     return fangle;
 }
 
+float scl300::getRotationAngle()
+{
+    float angle_z = SCL3300_ReadAngle(ANG_Z);
+    float yaw = angle_z;
+
+    // 转换为 -180° 到 +180° 范围
+    if (yaw > 180.0f) {
+        yaw -= 360.0f;
+    } else if (yaw < -180.0f) {
+        yaw += 360.0f;
+    }
+
+    return yaw;
+}
+float scl300::getTiltAngle()
+{
+    float angle_y = SCL3300_ReadAngle(ANG_Y);
+    float pitch = angle_y - 270.0f;
+
+    // 转换为 -180° 到 +180° 范围
+    if (pitch > 180.0f) {
+        pitch -= 360.0f;
+    } else if (pitch < -180.0f) {
+        pitch += 360.0f;
+    }
+
+    return pitch;
+}
 
 void  scl300::scl300_read_reg_multi_byte(uint8_t *buf, uint16_t len)
 {
@@ -310,7 +473,7 @@ void  scl300::scl300_read_reg_multi_byte(uint8_t *buf, uint16_t len)
         //printf("%02x ",buf[i]);
     }
 
-    printf("\n");
+    //printf("\n");
 
     if (ret < 1)
     {

@@ -3,6 +3,7 @@
 #include "mainwindow.h"
 #include <QCoreApplication>
 #include "QElapsedTimer"
+#include "QTime"
 #ifdef Q_OS_LINUX
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,10 +27,18 @@
 
 #define GPIO_DDI  41
 
-//pi15 pi16
+//pi15
 #define GPIO_CS1  271
+
+//pi16
 #define GPIO_CS2  272
 
+
+//pi13
+#define GPIO_CS3  269
+
+//pi14
+#define GPIO_CS4  270
 
 static int gpio_export(unsigned gpio)
 {
@@ -122,8 +131,8 @@ static int gpio_value(unsigned gpio, unsigned value)
 
 #endif
 
-struct ddc2556_data_type_ ddc2556_data[7];
-
+struct ddc2556_data_type_ ddc2556_data[9];
+struct ddc2556_data_type_ ddc2556_datacp[9];
 volatile uint32_t ddc2556_data_upload_timer = -1;//上传数据倒计时
 uint32_t ddc2556_data_wait_timer;	//
 volatile uint8_t ddc2556_data_upload_flag = 0;
@@ -140,14 +149,16 @@ void ddc2256::delayMs(int msec)
 }
 
 //检查ddc2556_data[p_chip*2+ic].adc_vale[i + 128] 256个数据是否大于1000，如果大于1000本底异常，173 测试通道除外
-#define  BENDI_MOSTVALUE 1000   
+#define  BENDI_MOSTVALUE 500
 void ddc2256::check_bendi()
 {
     //chip 0 到7 ，通道0到255
     int i;
     int p_chip = 0;
+    int icoutling=0;
     GpsystemStatus.bendi = 0;
-    for (p_chip = 0; p_chip < 7; p_chip++)
+    qDebug()<<"check bendi";
+    for (p_chip = 0; p_chip < 4; p_chip++)
     {
 		for (i = 0; i < 256; i++)
 		{
@@ -155,13 +166,22 @@ void ddc2256::check_bendi()
 			{
 				if (i != 173)
 				{
+                    //本底异常
 					GpsystemStatus.bendi = 1;
+                    //qDebug()<<"why the challes > is `````````````````````````````````````````"<<i<<ddc2556_data[p_chip].adc_vale[i];
 				}
 			}
+            if(ddc2556_data[p_chip].adc_vale[i]<50)
+            {
+                if (i != 173)
+                {
+                    //本底异常
+                    GpsystemStatus.bendi = 1;
+                    //qDebug()<<"why the challes < is ````````````````````````````````````"<<i<<ddc2556_data[p_chip].adc_vale[i];
+                }
+            }
 		}
 	}
-
-
 }
 ddc2256::ddc2256(QObject *parent) : QThread(parent)
 {
@@ -229,11 +249,21 @@ ddc2256::ddc2256(QObject *parent) : QThread(parent)
     gpio_export(GPIO_CS2);
     gpio_dir(GPIO_CS2,GPIO_DIR_OUT);
 
+
+    gpio_export(GPIO_CS3);
+    gpio_dir(GPIO_CS3,GPIO_DIR_OUT);
+
+
+    gpio_export(GPIO_CS4);
+    gpio_dir(GPIO_CS4,GPIO_DIR_OUT);
+
     SPI1_read_write_byte(0Xff);
 
     gpio_value(GPIO_DDI, 1);
     gpio_value(GPIO_CS1, 1);
     gpio_value(GPIO_CS2, 1);
+    gpio_value(GPIO_CS3, 1);
+    gpio_value(GPIO_CS4, 1);
     #endif
 
      tmer100ms = new QTimer();
@@ -248,10 +278,14 @@ ddc2256::ddc2256(QObject *parent) : QThread(parent)
      //tmer100ms->start(100);
      //tmer500ms->start(30);
 
-     uint32_t fpga_state= ddc2256_read_fpga_state(0);
+     uint32_t fpga_state = ddc2256_read_fpga_state(0);
 
-     uint32_t fpga_state2= ddc2256_read_fpga_state(1);
-     printf("chip 0 fpga_state %d\r\nchip 1 fpga_state %d\r\n",fpga_state, fpga_state2);
+     uint32_t fpga_state2 = ddc2256_read_fpga_state(1);
+
+     uint32_t fpga_state3 = ddc2256_read_fpga_state(2);
+
+     uint32_t fpga_state4 = ddc2256_read_fpga_state(3);
+     printf("chip 0 fpga_state %d\r\nchip 1 fpga_state %d\r\nchip 2 fpga_state %d\r\nchip 3 fpga_state %d\r\n",fpga_state, fpga_state2,fpga_state3, fpga_state4);
 
 }
 void ddc2256::run()
@@ -259,6 +293,7 @@ void ddc2256::run()
     QThread::msleep(500);//等待其他初始化
     QElapsedTimer timer; // 使用QElapsedTimer来计时
     int iicount = 0;
+    GpsystemStatus.bendi = 0;
     while (1)
     {
         timer.start(); // 开始计时
@@ -269,27 +304,41 @@ void ddc2256::run()
 
 
 
-        int res0 = 1, res1 = 1, res2 = 1, res3 = 1;
+        int res0 = 1, res1 = 1, res2 = 1, res3 = 1,res4 = 1, res5 = 1, res6 = 1, res7 = 1;
         bool collected = false; // 用于标记是否已经收集到所有必要的数据
         bool send = false;
 
         QThread::msleep(10);
         while(timer.elapsed() < 99) // 循环直到超过100ms
         {
-            if(res3 != 0) res3 = read_ddc2256_adc_data(1, 1);
 
+
+
+
+            if(res3 != 0) res3 = read_ddc2256_adc_data(1, 1);
             //QThread::msleep(1);
             if(res1 != 0) res1 = read_ddc2256_adc_data(0, 1);
             //QThread::msleep(1);
             if(res2 != 0) res2 = read_ddc2256_adc_data(1, 0);
             //QThread::msleep(1);
-
-
             if(res0 != 0) res0 = read_ddc2256_adc_data(0, 0);
 
 
+
+             if(res7 != 0) res7 = read_ddc2256_adc_data(3, 1);
+
+            //QThread::msleep(1);
+            if(res5 != 0) res5 = read_ddc2256_adc_data(2, 1);
+            //QThread::msleep(1);
+            if(res6 != 0) res6 = read_ddc2256_adc_data(3, 0);
+            //QThread::msleep(1);
+
+
+            if(res4 != 0) res4 = read_ddc2256_adc_data(2, 0);
+
+
             //if((0 == res0) || (0 == res1) || (0 == res2) || (0 == res3))
-            if((0 == res0) && (0 == res1) && (0 == res2) && (0 == res3))
+            if((0 == res0) && (0 == res1) && (0 == res2) && (0 == res3)&&(0 == res4) && (0 == res5) && (0 == res6) && (0 == res7))
             {
                 collected = true;
                // break; // 如果四个地址的数据都已采集，则跳出循环
@@ -304,13 +353,87 @@ void ddc2256::run()
             QThread::msleep(1);
         }
         //检查ddc2556_data[p_chip*2+ic].adc_vale[i + 128] 256个数据是否大于1000，如果大于1000本底异常，173 测试通道除外
-        check_bendi();
+        if(100<GpsystemStatus.chip0)
+        {
+            //qDebug()<<GpsystemStatus.chip0;
+            if(GpsystemStatus.chip0<200)
+            {
+                //check_bendi();
+            }
+        }
+
+
+
+
 
         if(!collected) // 如果不是所有数据都采集到
         {
 
-            if((0 == res0) || (0 == res1) || (0 == res2) || (0 == res3))
-            emit onepictureok(); // 发送信号
+            if((0 == res0) || (0 == res1) || (0 == res2) || (0 == res3)||(0 == res4) || (0 == res5) || (0 == res6) || (0 == res7))
+            {
+                int i=0;
+                if(0 != res0)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[0].adc_vale[i] = 0;
+                    }
+                }
+                if(0 != res1)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[1].adc_vale[i] = 0;
+                    }
+                }
+                if(0 != res2)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[2].adc_vale[i] = 0;
+                    }
+                }
+                if(0 != res3)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[3].adc_vale[i] = 0;
+                    }
+                }
+                if(0 != res4)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[4].adc_vale[i] = 0;
+                    }
+                }
+                if(0 != res5)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[5].adc_vale[i] = 0;
+                    }
+                }
+                if(0 != res6)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[6].adc_vale[i] = 0;
+                    }
+                }
+                if(0 != res7)
+                {
+                    for (i = 0; i < 256; i++)
+                    {
+                        ddc2556_data[7].adc_vale[i] = 0;
+                    }
+                }
+                for (int i = 0; i < 9; i++) {
+                    memcpy(&ddc2556_datacp[i], &ddc2556_data[i], sizeof(struct ddc2556_data_type_));
+                }
+                emit onepictureok(); // 发送信号
+            }
+
         }
 
 
@@ -442,6 +565,12 @@ void  ddc2256::ddc2256_read_reg_multi_byte(uint8_t p_chip, uint16_t reg_s_addr, 
         case DDC2256_CHIP_2:
         gpio_value(GPIO_CS2, 0);
             break;
+        case DDC2256_CHIP_3:
+        gpio_value(GPIO_CS3, 0);
+            break;
+        case DDC2256_CHIP_4:
+        gpio_value(GPIO_CS4, 0);
+            break;
     }
     delayMs(1);
 //     int ret = write(devfd, tx_buffer , 2); // 发送数据
@@ -524,6 +653,11 @@ void  ddc2256::ddc2256_read_reg_multi_byte(uint8_t p_chip, uint16_t reg_s_addr, 
         case DDC2256_CHIP_2:
         gpio_value(GPIO_CS2, 1);
             break;
+        case DDC2256_CHIP_3:
+        gpio_value(GPIO_CS3, 1);
+            break;
+        case DDC2256_CHIP_4:
+        gpio_value(GPIO_CS4, 1);
     }
 //    delayMs(1);
     #endif
@@ -583,6 +717,13 @@ void ddc2256::ddc2256_write_reg_multi_byte(uint8_t p_chip, uint16_t reg_s_addr, 
         case DDC2256_CHIP_2:
         gpio_value(GPIO_CS2, 0);
             break;
+        case DDC2256_CHIP_3:
+        gpio_value(GPIO_CS3, 0);
+            break;
+        case DDC2256_CHIP_4:
+        gpio_value(GPIO_CS4, 0);
+            break;
+
     }
     transfer.tx_buf = (unsigned long)tx_buffer;
     transfer.len = len+2;
@@ -605,6 +746,11 @@ void ddc2256::ddc2256_write_reg_multi_byte(uint8_t p_chip, uint16_t reg_s_addr, 
         case DDC2256_CHIP_2:
         gpio_value(GPIO_CS2, 1);
             break;
+        case DDC2256_CHIP_3:
+        gpio_value(GPIO_CS3, 1);
+            break;
+        case DDC2256_CHIP_4:
+        gpio_value(GPIO_CS4, 1);
     }
     #endif
 
@@ -710,14 +856,16 @@ uint8_t ddc2256:: read_ddc2256_adc_data(uint8_t p_chip, uint8_t ic)
     //if (1)
     {
         //读取更新次数
-//        uint32_t id  = ddc2256_read_fpga_id(p_chip);
-//        printf("p_chip %d id is  %d\r\n",p_chip,id);
+        uint32_t id  = ddc2256_read_fpga_id(p_chip);
+        //printf("p_chip %d id is  %d\r\n",p_chip,id);
 
-//        uint32_t fpga_state= ddc2256_read_fpga_state(p_chip);
-//        printf("chip %d fpga_state %d\r\n",p_chip, fpga_state);
+        uint32_t fpga_state= ddc2256_read_fpga_state(p_chip);
+        //printf("chip %d fpga_state %d\r\n",p_chip, fpga_state);
 
 
         p_collect_sum[p_chip*2+ic] = ddc2256_read_num(p_chip,ic);
+
+       // printf("ddc2256_read_num chip%02u ic %d:%d\r\n", p_chip,ic, p_collect_sum[p_chip*2+ic]);
         //printf("%d, %d, %d, sum_1: %d, sum_2: %d\r\n",pdata_h[0],pdata_h[1],pdata_h[2],((uint32_t)pdata_h[0] << 16) + ((uint32_t)pdata_h[1] << 8),p_collect_sum[p_chip*2+ic]);
         if ((p_collect_sum[p_chip*2+ic] != 0) && (p_collect_sum[p_chip*2+ic] != ddc2556_data[p_chip*2+ic].collect_sum))
         {
@@ -825,17 +973,33 @@ uint8_t ddc2256:: read_ddc2256_adc_data(uint8_t p_chip, uint8_t ic)
             {
                 GpsystemStatus.chip0+=1;
             }
-            else if(p_chip==1&&ic==0)
+            else if(p_chip==0&&ic==1)
             {
                 GpsystemStatus.chip1+=1;
             }
-            else if(p_chip==0&&ic==1)
+            else if(p_chip==1&&ic==0)
             {
                 GpsystemStatus.chip2+=1;
             }
             else if(p_chip==1&&ic==1)
             {
                 GpsystemStatus.chip3+=1;
+            }
+            else if (p_chip==2&&ic==0)
+            {
+                GpsystemStatus.chip4+=1;
+            }
+            else if(p_chip==2&&ic==1)
+            {
+                GpsystemStatus.chip5+=1;
+            }
+            else if(p_chip==3&&ic==0)
+            {
+                GpsystemStatus.chip6+=1;
+            }
+            else if(p_chip==3&&ic==1)
+            {
+                GpsystemStatus.chip7+=1;
             }
             return 0;
         }
