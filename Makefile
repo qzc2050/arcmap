@@ -694,11 +694,14 @@ qrc_res.cpp: res/res.qrc \
 		res/wifi2.png \
 		res/wifi3.png \
 		res/wifi4.png \
+		res/net-arcii.png \
 		res/eth0no.png \
 		res/yespng.png \
 		res/Frame1211.png \
+		res/ArcMap-II.png \
 		res/unchecked.png \
 		res/bat50.png \
+		res/wifi-arcii.png \
 		res/bat0.png \
 		res/bat80_y.png \
 		res/wifi-no.png \
@@ -1274,6 +1277,8 @@ moc_mainwindow.cpp: ddc2256.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		mainwindow.h \
 		moc_predefs.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/bin/moc
@@ -1865,11 +1870,11 @@ ddc2256.o: ddc2256.cpp ddc2256.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QCoreApplication \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreapplication.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qeventloop.h \
-		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
-		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QTime \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qdatetime.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ddc2256.o ddc2256.cpp
@@ -2031,7 +2036,9 @@ fbtft.o: fbtft.cpp fbtft.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbustcpserver.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
-		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o fbtft.o fbtft.cpp
 
 fsymulticastbeacon.o: fsymulticastbeacon.cpp fsymulticastbeacon.h \
@@ -2172,6 +2179,8 @@ fsymulticastbeacon.o: fsymulticastbeacon.cpp fsymulticastbeacon.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDebug \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QHostAddress \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QNetworkInterface \
@@ -2317,6 +2326,8 @@ gpio_contorl.o: gpio_contorl.cpp gpio_contorl.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbustcpserver.h \
 		ws2812_spi.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDebug
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gpio_contorl.o gpio_contorl.cpp
 
@@ -2460,7 +2471,9 @@ iicthread.o: iicthread.cpp iicthread.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtSerialBus/qmodbustcpserver.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
-		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o iicthread.o iicthread.cpp
 
 main.o: main.cpp mainwindow.h \
@@ -2600,6 +2613,8 @@ main.o: main.cpp mainwindow.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/QApplication \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/qapplication.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qcoreapplication.h \
@@ -2746,6 +2761,8 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		ui_mainwindow.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QVariant \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtWidgets/QAction \
@@ -2791,8 +2808,6 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QSize \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QSizeF \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtGui/QTransform \
-		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
-		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/QNetworkInterface \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtNetwork/qnetworkinterface.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QDebug \
@@ -2939,6 +2954,8 @@ modbusslave.o: modbusslave.cpp modbusslave.h \
 		ads118.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QSettings \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsettings.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbusslave.o modbusslave.cpp
@@ -3215,6 +3232,8 @@ tcpnetserver.o: tcpnetserver.cpp tcpnetserver.h \
 		gpio_contorl.h \
 		ws2812_spi.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QByteArray \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QElapsedTimer \
+		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qelapsedtimer.h \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/QSettings \
 		/root/buildroot-201611/dl/qt-everywhere-opensource-src-5.9.0/Qt-5.9.0/include/QtCore/qsettings.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tcpnetserver.o tcpnetserver.cpp

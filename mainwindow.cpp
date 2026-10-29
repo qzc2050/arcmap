@@ -938,7 +938,8 @@ void MainWindow::shownets()
     memset ( cmdresult,0, 256 );
     FILE* pp;
 
-
+    bool ethCarrier = false;
+    bool wifiCarrier = false;
 
     if (eth0status)
     {
@@ -951,13 +952,6 @@ void MainWindow::shownets()
 
         if ( strstr ( cmdresult, "0" ) )
         {
-            //有线网络断开
-            //qDebug()<<"yes lianjie c";
-            QString stext = QString(tr(""));
-
-            QPixmap picno(stext);
-
-            ui->label_eth0->setPixmap(picno);
             //有线网络断开
             if(Beth0)
             {
@@ -1078,22 +1072,8 @@ void MainWindow::shownets()
                 Beth0 = true;
             }
 
-            //qDebug()<<"yes nolianjie";
-            QString stext = QString(tr(":/eth0yes.png"));
-
-            QPixmap picno(stext);
-
-            ui->label_eth0->setPixmap(picno);
+            ethCarrier = true;
         }
-    }
-    else
-    {
-        QString stext = QString(tr(""));
-
-        //qDebug()<<"is no readable";
-        QPixmap picno(stext);
-
-        ui->label_eth0->setPixmap(picno);
     }
     if(Beth0)
     {
@@ -1122,17 +1102,12 @@ void MainWindow::shownets()
         if ( strstr ( cmdresult, "0" ) )
         {
             //无线网络断开
-            //qDebug()<<"yes lianjie c";
-            QString stext = QString(tr(""));
-
-            QPixmap picno(stext);
-
-            ui->label_wifi->setPixmap(picno);
             GpsystemStatus.wifistatus = 0;
             updateWifiSignalFromProc(false);
         }
         else
         {
+            wifiCarrier = true;
             updateWifiSignalFromProc(true);
 
             //判断wlan0的ip地址是否有效
@@ -1151,31 +1126,18 @@ void MainWindow::shownets()
 				//qDebug()<<"yes nolianjie";
                 if(!Beth0)
                 {
-                    QString stext = QString(tr(":/wifi4.png"));
-
-                    QPixmap picno(stext);
-
-                    ui->label_wifi->setPixmap(picno);
                     GpsystemStatus.wifistatus = 1;
                 }
                 else {
-                    //无线网络断开
+                    //有线优先，无线状态记为未用
                     GpsystemStatus.wifistatus = 0;
-
-                    ui->label_wifi->setPixmap(QPixmap());
-
                 }
 
 			}
 			else
 			{
                 //无线网络断开
-                
-
                 GpsystemStatus.wifistatus = 0;
-
-                ui->label_wifi->setPixmap(QPixmap());
-
             }
 
 
@@ -1185,13 +1147,14 @@ void MainWindow::shownets()
     {
         GpsystemStatus.wifistatus = 0;
         updateWifiSignalFromProc(false);
-
-        QString stext = QString(tr(""));
-
-        QPixmap picno(stext);
-
-        ui->label_wifi->setPixmap(picno);
     }
+
+    if (ethCarrier)
+        ui->label_net->setPixmap(QPixmap(QStringLiteral(":/net-arcii.png")));
+    else if (wifiCarrier)
+        ui->label_net->setPixmap(QPixmap(QStringLiteral(":/wifi-arcii.png")));
+    else
+        ui->label_net->setPixmap(QPixmap());
 
 
 
