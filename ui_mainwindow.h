@@ -49,7 +49,7 @@ public:
         label_temp->setObjectName(QStringLiteral("label_temp"));
         label_temp->setGeometry(QRect(350, 30, 91, 41));
         QFont font;
-        font.setPointSize(7);
+        font.setPointSize(6);
         label_temp->setFont(font);
         label_temp->setStyleSheet(QStringLiteral("color: rgb(255, 255, 255);"));
         label_temp->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
@@ -78,14 +78,14 @@ public:
         label_yang->setAlignment(Qt::AlignCenter);
         label_ip = new QLabel(centralwidget);
         label_ip->setObjectName(QStringLiteral("label_ip"));
-        label_ip->setGeometry(QRect(430, 310, 351, 41));
+        label_ip->setGeometry(QRect(420, 310, 351, 41));
         QFont font2;
         font2.setPointSize(8);
         label_ip->setFont(font2);
         label_ip->setStyleSheet(QStringLiteral("color: rgb(255, 255, 255);"));
         label_net = new QLabel(centralwidget);
         label_net->setObjectName(QStringLiteral("label_net"));
-        label_net->setGeometry(QRect(300, 300, 48, 48));
+        label_net->setGeometry(QRect(300, 305, 48, 48));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
