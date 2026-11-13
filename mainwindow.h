@@ -49,7 +49,7 @@ extern int Goldmode;
 typedef struct systemstatus
 {
     int   battstatus;   //电池状态 0 没有电池，1充电， 2正常放电
-    int   pressstatus;  //压力传感器bmp280是否在线
+    int   pressstatus;  //气压传感器是否在线，BMP280、SPL06-001、SPA06-003 共用
     int   temptatus;    //温度传感器ads115是否在线
     int   ddc2256tatus; //采集板连接状态
     float press;        //压强

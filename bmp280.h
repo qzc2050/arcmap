@@ -2,6 +2,7 @@
 #define BMP280_H
 
 #include <QObject>
+#include <stdint.h>
 
 //*******************************下面是用来计算补偿值相关**********************************/
 typedef			long signed int				BMP280_S32_t;	//有符号 64位！
@@ -165,6 +166,28 @@ typedef struct
     FunctionalState				SPI_EN;
 } BMP_CONFIG;
 
+/* 焊盘上可能是 BMP280、SPL06-001 或 SPA06-003，上电按芯片 ID 自动选择 */
+#define PRESS_CHIP_NONE     0
+#define PRESS_CHIP_BMP280   1
+#define PRESS_CHIP_SPA06    2
+
+typedef struct
+{
+    int32_t c0;
+    int32_t c1;
+    int32_t c00;
+    int32_t c10;
+    int32_t c01;
+    int32_t c11;
+    int32_t c20;
+    int32_t c21;
+    int32_t c30;
+    int32_t c31;
+    int32_t c40;
+    double  kT;
+    double  kP;
+} SPA06_CALIB;
+
 class MYBMP280 : public QObject
 {
     Q_OBJECT
@@ -174,6 +197,9 @@ public:
     BMP280 yesbmp280;
     int devfd;
     int devaddr;
+    int chiptype;
+    unsigned char chipid;
+    SPA06_CALIB spa;
     void setid(int fd);
     uint8_t BMP280_Read_Byte(uint8_t reg);
     void BMP280_Write_Byte(uint8_t reg,uint8_t data);
@@ -188,6 +214,14 @@ public:
     double bmp280_get_temperature(void);
     double bmp280_get_pressure(void);
     int status;
+
+private:
+    bool detect_press_chip(void);
+    void bmp280_init_chip(void);
+    void spa06_init_chip(void);
+    bool spa06_read_coef(void);
+    double spa06_get_pressure(void);
+    double spa06_get_temperature(void);
 
 signals:
 

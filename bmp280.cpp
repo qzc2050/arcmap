@@ -1,8 +1,45 @@
 #include "bmp280.h"
 
 #include "myiic.h"
+#include <QDebug>
+#include <QThread>
+#include <string.h>
 
-#define MAX_BYTES 10
+#define MAX_BYTES 32
+
+#define BMP280_CHIPID_VALUE                 0x58
+#define SPA06_I2C_ADDR_ALT                  0x77
+#define SPA06_REG_PSR                       0x00
+#define SPA06_REG_TMP                       0x03
+#define SPA06_REG_PRS_CFG                   0x06
+#define SPA06_REG_TMP_CFG                   0x07
+#define SPA06_REG_MEAS_CFG                  0x08
+#define SPA06_REG_CFG                       0x09
+#define SPA06_REG_RESET                     0x0C
+#define SPA06_REG_ID                        0x0D
+#define SPA06_REG_COEF                      0x10
+#define SPA06_COEF_LEN                      21
+#define SPA06_CMD_RESET                     0x09
+/* 0x0D：0x10 是 SPL06-001，0x11 是 SPA06-003。这台板子实测为 0x10 */
+#define SPL06_CHIPID_VALUE                  0x10
+#define SPA06_CHIPID_VALUE                  0x11
+/* 4 次/秒、气压 8 倍过采样；温度单次。8 倍及以下不需要结果移位 */
+#define SPA06_PRS_CFG_VAL                   0x23
+#define SPA06_TMP_CFG_VAL                   0x00
+#define SPA06_CFG_VAL                       0x00
+#define SPA06_MEAS_BACKGROUND               0x07
+#define SPA06_SCALE_P                       7864320.0
+#define SPA06_SCALE_T                       524288.0
+
+static int32_t spa06_sext(uint32_t value, int bits)
+{
+    uint32_t sign = 1u << (bits - 1);
+    uint32_t mask = (1u << bits) - 1u;
+    value &= mask;
+    if (value & sign)
+        value |= ~mask;
+    return (int32_t)value;
+}
 static int gDeviceStatus;
 static int i2c_write(int fd,unsigned int addr,unsigned int offset,unsigned char *buf,unsigned int len)
 {
@@ -97,6 +134,9 @@ MYBMP280::MYBMP280(QObject *parent) : QObject(parent)
 {
     pbmp280 = (BMP280*)(&yesbmp280);
     status = 0;
+    chiptype = PRESS_CHIP_NONE;
+    chipid = 0;
+    memset(&spa, 0, sizeof(spa));
 }
 
 void MYBMP280::setid(int fd)
@@ -300,6 +340,9 @@ double MYBMP280::bmp280_compensate_P_double(BMP280_S32_t adc_P)
 //大气压值-Pa
 double MYBMP280::bmp280_get_pressure(void)
 {
+    if (chiptype == PRESS_CHIP_SPA06)
+        return spa06_get_pressure();
+
     uint8_t XLsb,Lsb, Msb;
     long signed Bit32;
     double pressure;
@@ -315,6 +358,9 @@ double MYBMP280::bmp280_get_pressure(void)
 //温度值-℃
 double MYBMP280::bmp280_get_temperature(void)
 {
+    if (chiptype == PRESS_CHIP_SPA06)
+        return spa06_get_temperature();
+
     uint8_t XLsb,Lsb, Msb;
     long signed Bit32;
     double temperature;
@@ -352,7 +398,183 @@ void MYBMP280::BMP280_Set_TemOversamp(BMP_OVERSAMPLE_MODE * Oversample_Mode)
 
 
 
+static int read_reg(int fd, unsigned int addr, unsigned int reg, unsigned char *val)
+{
+    unsigned char buf[1] = {0};
+    if (i2c_read(fd, addr, reg, buf, 1) < 0)
+        return -1;
+    *val = buf[0];
+    return 0;
+}
+
+static bool spa06_id_match(unsigned char id)
+{
+    return id == SPL06_CHIPID_VALUE || id == SPA06_CHIPID_VALUE;
+}
+
+bool MYBMP280::detect_press_chip(void)
+{
+    const int addrs[2] = { BMP280_ADDRESS, SPA06_I2C_ADDR_ALT };
+
+    /* 先读 SPA06 的 0x0D。SPA06 没有 0xD0，先读不存在的寄存器会 NACK，后面这次读取可能一起失败。 */
+    for (int i = 0; i < 2; i++) {
+        unsigned char id_spa = 0;
+        unsigned char id_bmp = 0;
+        int ret_spa;
+        int ret_bmp;
+
+        devaddr = addrs[i];
+        ret_spa = read_reg(devfd, (unsigned int)devaddr, SPA06_REG_ID, &id_spa);
+        if (ret_spa < 0) {
+            QThread::msleep(2);
+            ret_spa = read_reg(devfd, (unsigned int)devaddr, SPA06_REG_ID, &id_spa);
+        }
+        if (ret_spa == 0 && spa06_id_match(id_spa)) {
+            chiptype = PRESS_CHIP_SPA06;
+            chipid = id_spa;
+            qDebug("pressure sensor: %s, addr=0x%02X, id=0x%02X",
+                   id_spa == SPL06_CHIPID_VALUE ? "SPL06-001" : "SPA06-003",
+                   devaddr, id_spa);
+            return true;
+        }
+
+        ret_bmp = read_reg(devfd, (unsigned int)devaddr, BMP280_CHIPID_REG, &id_bmp);
+        if (ret_bmp == 0 && id_bmp == BMP280_CHIPID_VALUE) {
+            chiptype = PRESS_CHIP_BMP280;
+            qDebug("pressure sensor: BMP280, addr=0x%02X, id=0x%02X", devaddr, id_bmp);
+            return true;
+        }
+
+        qDebug("pressure probe addr=0x%02X spa06_reg=0x0D ret=%d id=0x%02X, bmp280_reg=0xD0 ret=%d id=0x%02X",
+               devaddr, ret_spa, id_spa, ret_bmp, id_bmp);
+    }
+
+    return false;
+}
+
+bool MYBMP280::spa06_read_coef(void)
+{
+    unsigned char b[SPA06_COEF_LEN];
+
+    memset(b, 0, sizeof(b));
+    if (i2c_read(devfd, (unsigned int)devaddr, SPA06_REG_COEF, b, SPA06_COEF_LEN) < 0)
+        return false;
+
+    spa.c0  = spa06_sext(((uint32_t)b[0] << 4) | (b[1] >> 4), 12);
+    spa.c1  = spa06_sext((((uint32_t)b[1] & 0x0F) << 8) | b[2], 12);
+    spa.c00 = spa06_sext(((uint32_t)b[3] << 12) | ((uint32_t)b[4] << 4) | (b[5] >> 4), 20);
+    spa.c10 = spa06_sext((((uint32_t)b[5] & 0x0F) << 16) | ((uint32_t)b[6] << 8) | b[7], 20);
+    spa.c01 = (int32_t)(int16_t)(((uint16_t)b[8] << 8) | b[9]);
+    spa.c11 = (int32_t)(int16_t)(((uint16_t)b[10] << 8) | b[11]);
+    spa.c20 = (int32_t)(int16_t)(((uint16_t)b[12] << 8) | b[13]);
+    spa.c21 = (int32_t)(int16_t)(((uint16_t)b[14] << 8) | b[15]);
+    spa.c30 = (int32_t)(int16_t)(((uint16_t)b[16] << 8) | b[17]);
+    spa.c31 = spa06_sext(((uint32_t)b[18] << 4) | (b[19] >> 4), 12);
+    spa.c40 = spa06_sext((((uint32_t)b[19] & 0x0F) << 8) | b[20], 12);
+    /* SPL06-001 的系数只到 c30，0x22 之后不是 c31/c40 */
+    if (chipid == SPL06_CHIPID_VALUE) {
+        spa.c31 = 0;
+        spa.c40 = 0;
+    }
+    spa.kP = SPA06_SCALE_P;
+    spa.kT = SPA06_SCALE_T;
+    return true;
+}
+
+double MYBMP280::spa06_get_pressure(void)
+{
+    unsigned char b[6] = {0};
+    int32_t praw, traw;
+    double praw_sc, traw_sc, ps2, ps3, ps4;
+
+    if (spa.kP == 0.0 || spa.kT == 0.0) {
+        status = 0;
+        return 0;
+    }
+
+    if (i2c_read(devfd, (unsigned int)devaddr, SPA06_REG_PSR, b, 6) < 0) {
+        status = 0;
+        return 0;
+    }
+
+    status = gDeviceStatus;
+    praw = spa06_sext(((uint32_t)b[0] << 16) | ((uint32_t)b[1] << 8) | b[2], 24);
+    traw = spa06_sext(((uint32_t)b[3] << 16) | ((uint32_t)b[4] << 8) | b[5], 24);
+    praw_sc = (double)praw / spa.kP;
+    traw_sc = (double)traw / spa.kT;
+    ps2 = praw_sc * praw_sc;
+    ps3 = ps2 * praw_sc;
+    ps4 = ps3 * praw_sc;
+
+    return spa.c00
+            + spa.c10 * praw_sc
+            + spa.c20 * ps2
+            + spa.c30 * ps3
+            + spa.c40 * ps4
+            + traw_sc * (spa.c01 + spa.c11 * praw_sc + spa.c21 * ps2 + spa.c31 * ps3);
+}
+
+double MYBMP280::spa06_get_temperature(void)
+{
+    unsigned char b[3] = {0};
+    int32_t traw;
+    double traw_sc;
+
+    if (spa.kT == 0.0)
+        return 0;
+
+    if (i2c_read(devfd, (unsigned int)devaddr, SPA06_REG_TMP, b, 3) < 0)
+        return 0;
+
+    traw = spa06_sext(((uint32_t)b[0] << 16) | ((uint32_t)b[1] << 8) | b[2], 24);
+    traw_sc = (double)traw / spa.kT;
+    return spa.c0 * 0.5 + spa.c1 * traw_sc;
+}
+
+void MYBMP280::spa06_init_chip(void)
+{
+    int i;
+    unsigned char meas = 0;
+
+    BMP280_Write_Byte(SPA06_REG_RESET, SPA06_CMD_RESET);
+    QThread::msleep(10);
+
+    for (i = 0; i < 20; i++) {
+        if (read_reg(devfd, (unsigned int)devaddr, SPA06_REG_MEAS_CFG, &meas) == 0
+                && (meas & 0xC0) == 0xC0)
+            break;
+        QThread::msleep(2);
+    }
+
+    if (!spa06_read_coef()) {
+        status = 0;
+        qDebug("pressure sensor: SPA06-003 coefficient read failed");
+        return;
+    }
+
+    BMP280_Write_Byte(SPA06_REG_PRS_CFG, SPA06_PRS_CFG_VAL);
+    /* SPL06 的 TMP_CFG.7 是 TMP_EXT，必须置 1 才使用 MEMS 温度，校准系数按这个温度计算 */
+    BMP280_Write_Byte(SPA06_REG_TMP_CFG,
+                      SPA06_TMP_CFG_VAL | (chipid == SPL06_CHIPID_VALUE ? 0x80 : 0));
+    BMP280_Write_Byte(SPA06_REG_CFG, SPA06_CFG_VAL);
+    BMP280_Write_Byte(SPA06_REG_MEAS_CFG, SPA06_MEAS_BACKGROUND);
+}
+
 void MYBMP280::bmp280_init(void)
+{
+    if (!detect_press_chip()) {
+        devaddr = BMP280_ADDRESS;
+        chiptype = PRESS_CHIP_BMP280;
+        qDebug("pressure sensor: chip id not matched, use BMP280 @0x76");
+    }
+
+    if (chiptype == PRESS_CHIP_SPA06)
+        spa06_init_chip();
+    else
+        bmp280_init_chip();
+}
+
+void MYBMP280::bmp280_init_chip(void)
 {
     u8 Lsb,Msb;
 
